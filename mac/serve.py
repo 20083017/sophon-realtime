@@ -43,6 +43,7 @@ DISCONNECT = json.dumps({"type": "disconnect"})
 MAX_UTT_S = 15.0             # speech running longer than this no longer keeps the conversation open
 FRAME_S = 0.02               # reply audio goes out in frames this long
 PL = Playout(a.device_buffer, a.max_hold)    # what the link and the model have been doing, kept across conversations
+gain = InputGain()                            # the microphone's level is a property of the device and the room, so it is kept across conversations too
 busy = False
 
 
@@ -130,7 +131,7 @@ async def handle(ws):
 
     echo = Echo(a.delay_ms) if a.talk_over and not a.no_aec else None          # needed only while the microphone is open during replies
     rec = ([], []) if a.dump_dir else None
-    PL.new_link(); gain = InputGain()
+    PL.new_link()
 
     async def probe_link():
         """Round trips to the client, twice a second: the jitter of the link, which sets how far ahead audio can safely be sent. Also keeps the input gain
