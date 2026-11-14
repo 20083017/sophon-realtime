@@ -11,7 +11,7 @@ from __future__ import annotations
 import collections
 
 FRAME_S = 0.02
-JITTER_MARGIN = 1.5            # the 95th percentile is not a worst case
+JITTER_MARGIN = 1.5            # the slowest recent round trip is not the slowest to come
 CAPACITY_USE = 0.75            # of the client's buffer, so a burst does not overflow it
 PRIOR_LEAD_FRACTION = 0.5      # of capacity: the send-ahead before any round trip has been measured
 PRIOR_HOLD_S = 0.8             # the hold before any reply has been timed
@@ -48,9 +48,9 @@ class Playout:
         self.speed.append(audio_s / gen_s); self.length.append(audio_s); self.stalls.append(worst)
 
     def jitter(self) -> float:
-        """The spread of the one-way delay, from the spread of the round trips: how far the slow ones run beyond the fast ones, halved."""
+        """The spread of the one-way delay, from the spread of the round trips: how far the slowest recent one runs beyond the fastest, halved. A single late packet is a gap in the sound, so the worst case counts, not a percentile."""
         if len(self.rtt) < 5: return 0.0
-        return max(0.0, percentile(self.rtt, 0.95) - min(self.rtt)) / 2
+        return max(0.0, max(self.rtt) - min(self.rtt)) / 2
 
     def lead(self) -> float:
         """How far ahead of the moment the client plays it a frame may be sent: enough to ride out the link's jitter, within what the client can hold."""

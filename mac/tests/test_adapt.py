@@ -21,6 +21,10 @@ class Lead(unittest.TestCase):
     def test_a_steady_link_needs_only_a_few_frames(self):
         self.assertAlmostEqual(playout(rtts=[0.005] * 20).lead(), 3 * FRAME_S)
 
+    def test_one_slow_round_trip_widens_it(self):
+        steady = playout(rtts=[0.01] * 40).lead(); spike = playout(rtts=[0.01] * 39 + [0.3]).lead()
+        self.assertGreater(spike, steady + 0.1)
+
     def test_it_grows_with_the_link_jitter(self):
         calm = playout(rtts=[0.01] * 20).lead()
         rng = random.Random(1); jittery = playout(rtts=[rng.uniform(0.005, 0.23) for _ in range(40)]).lead()
