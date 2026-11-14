@@ -28,7 +28,7 @@ ap.add_argument("--mic-gain", type=float, default=None, help="a fixed multiplier
 ap.add_argument("--state", action="store_true", help="also send {\"type\": \"state\", \"state\": ..., \"left\": ...} text frames saying what the conversation is doing (waiting, hearing, thinking, speaking, ignoring) and how much of the quiet before it ends is left, for a client with a status display")
 ap.add_argument("--talk-over", action="store_true", help="keep listening while a reply plays, so speech over it interrupts it; only for a client that removes its own echo well")
 ap.add_argument("--echo-tail", type=float, default=0.8, help="seconds after the last reply audio was sent during which the microphone is still ignored: the client plays it later than it receives it, and the room rings on")
-ap.add_argument("--no-aec", action="store_true", help="do not cancel echo here (the client has a headset or does its own)")
+ap.add_argument("--no-aec", action="store_true", help="with --talk-over, do not cancel echo here either (the client has a headset or does its own); without --talk-over the microphone is off while the device speaks and no echo is cancelled")
 ap.add_argument("--delay-ms", type=int, default=250, help="how long after the server sends a reply frame its echo reaches the microphone, as a hint for the echo canceller: the send lead, the client buffer and the room")
 ap.add_argument("--speaker-model", default=os.path.join(os.path.dirname(HERE), "models", "speaker", "voxceleb_resnet34_LM.onnx"), help="WeSpeaker ONNX model; when the file exists, only the voice that spoke first after connecting is answered")
 ap.add_argument("--speaker-threshold", type=float, default=0.5, help="cosine similarity to the owner's voice below which speech is treated as someone else's")
@@ -128,7 +128,7 @@ async def handle(ws):
             if limit > 0 and now - idle_since >= limit:
                 await ws.send(DISCONNECT); await ws.close(); return
 
-    echo = None if a.no_aec else Echo(a.delay_ms)
+    echo = Echo(a.delay_ms) if a.talk_over and not a.no_aec else None          # needed only while the microphone is open during replies
     rec = ([], []) if a.dump_dir else None
     PL.new_link(); gain = InputGain()
 
