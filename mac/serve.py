@@ -1,6 +1,6 @@
 """Sophon Realtime on a Mac, served over a WebSocket: a network device supplies the microphone and the speaker.
 
-The wire format is the simplest one a small device can speak. Binary frames are raw PCM16 mono audio at --rate, in both directions. A text frame {"type": "interrupt"} means "stop talking now": the server sends it when the user barges in, so the client can drop audio it has buffered, and a client may send it to cut the reply itself (a wake word spoken over the reply, for example). Reply audio is sent in 20 ms frames, no further ahead of real time than LEAD_S: the engine produces speech faster than it is spoken, and a small device has no room to hold the difference. With --events the server also sends the engine's own events (reply_start, first_audio, reply_done, barge_in, ...) as text frames.
+The wire format is the simplest one a small device can speak. Binary frames are raw PCM16 mono audio at --rate, in both directions. A text frame {"type": "interrupt"} means "stop talking now": the server sends it when the user barges in, so the client can drop audio it has buffered, and a client may send it to cut the reply itself (a wake word spoken over the reply, for example). Reply audio is sent in 20 ms frames, no further ahead of real time than --lead: the engine produces speech faster than it is spoken, and a small device has no room to hold the difference. With --events the server also sends the engine's own events (reply_start, first_audio, reply_done, barge_in, ...) as text frames.
 
 The speaker model is WeSpeaker's voxceleb_resnet34_LM.onnx (CC BY 4.0, huggingface.co/Wespeaker/wespeaker-voxceleb-resnet34-LM), needing the onnxruntime package. When it is present, the first voice heard after connecting is taken as the person who woke the device, and speech in other voices (a television, bystanders) is ignored: it starts no reply, does not keep the conversation open, and a reply it cut off is resumed. The conversation ends by itself, after --first seconds of quiet with no reply yet or --followup seconds after a reply has been played: the server sends {"type": "disconnect"} and closes, and the client goes back to waiting for its wake word. While a reply is generated, sent or played, and --echo-tail after, the microphone audio is replaced by silence (--talk-over turns that off), because a small speaker next to its microphone is heard at a level and delay no canceller here follows; a client interrupts a reply with its wake word or a text frame. The reply audio is also the reference for WebRTC echo cancellation on the incoming audio (--no-aec turns that off for a headset), so the reply is not heard as the user speaking. One conversation at a time: a second client is refused while one is connected.
 
@@ -24,6 +24,7 @@ ap.add_argument("--first", type=float, default=10.0, help="seconds of quiet afte
 ap.add_argument("--prebuffer", type=float, default=0.8, help="seconds of reply audio to have ready before it starts playing (also after it has run dry), unless the reply is complete: the engine can generate speech at about the speed it is spoken, and a pause between words is worse than a late start")
 ap.add_argument("--mic-gain", type=float, default=1.0, help="multiplier for the incoming microphone audio, for a client whose microphone path is quiet (for example echo cancellation without gain control)")
 ap.add_argument("--prebuffer-max", type=float, default=4.0, help="the most seconds of reply audio to hold before it starts playing: the target doubles up to this after the reply runs dry mid-sentence, and halves back after a reply")
+ap.add_argument("--lead", type=float, default=0.3, help="the most seconds reply audio is sent ahead of the moment the client plays it (default 0.3): more absorbs Wi-Fi jitter, but the client must have room to hold it")
 ap.add_argument("--talk-over", action="store_true", help="keep listening while a reply plays, so speech over it interrupts it; only for a client that removes its own echo well")
 ap.add_argument("--echo-tail", type=float, default=0.8, help="seconds after the last reply audio was sent during which the microphone is still ignored: the client plays it later than it receives it, and the room rings on")
 ap.add_argument("--no-aec", action="store_true", help="do not cancel echo here (the client has a headset or does its own)")
@@ -40,7 +41,6 @@ INTERRUPT = json.dumps({"type": "interrupt"})
 DISCONNECT = json.dumps({"type": "disconnect"})
 MAX_UTT_S = 15.0             # speech running longer than this no longer keeps the conversation open
 FRAME_S = 0.02               # reply audio goes out in frames this long
-LEAD_S = 0.12                # and at most this far ahead of the moment the client will play it
 busy = False
 
 
@@ -66,7 +66,7 @@ async def handle(ws):
     def log(m):
         ev = json.loads(m).get("ev")
         if a.log_events: print(m, flush=True)
-        if ev == "reply_start": st["replying"] = st["replied"] = True
+        if ev == "reply_start": st["replying"] = st["replied"] = st["fresh"] = True
         elif ev == "reply_done": st["replying"] = False
         if a.events: loop.call_soon_threadsafe(out.put_nowait, m)
 
@@ -79,7 +79,7 @@ async def handle(ws):
             if ends and not pending and not st["replying"] and now > ends + 1.0:      # a reply has finished and been played out
                 ends = 0.0; st["ends"] = 0.0; target = max(a.prebuffer, target / 2)
             held = bool(pending) and ends <= now and len(pending) * FRAME_S < target and st["replying"]    # audio is not yet far enough ahead of its generation to start playing
-            wait = (0.05 if held else ends - LEAD_S - now) if pending else None
+            wait = (0.05 if held else ends - a.lead - now) if pending else None
             if wait is None or wait > 0:
                 try: m = await asyncio.wait_for(out.get(), wait)
                 except asyncio.TimeoutError: m = b""
@@ -97,8 +97,9 @@ async def handle(ws):
             else:
                 pending.extend(m[i:i + step] for i in range(0, len(m), step))
             held = bool(pending) and ends <= loop.time() and len(pending) * FRAME_S < target and st["replying"]
-            if pending and not held and loop.time() >= ends - LEAD_S:
+            if pending and not held and loop.time() >= ends - a.lead:
                 f = pending.popleft(); await ws.send(f)
+                if st.pop("fresh", False): ends = 0.0       # the first frame of a new reply: the time since the last one is silence between replies, not an underrun
                 gap = loop.time() - ends
                 if ends > 0 and gap > 0.04:                  # the reply ran dry mid-sentence: the client ran out of audio this long ago, as far as the server can tell
                     target = min(max(target * 2, a.prebuffer), a.prebuffer_max)
