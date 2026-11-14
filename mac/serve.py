@@ -22,7 +22,7 @@ ap.add_argument("--rate", type=int, default=24000, help="sample rate of the clie
 ap.add_argument("--events", action="store_true", help="also send the engine's events to the client as text frames")
 ap.add_argument("--followup", type=float, default=6.0, help="seconds of quiet after a reply has been played before the conversation ends (0: never)")
 ap.add_argument("--first", type=float, default=10.0, help="seconds of quiet after connecting, with no reply yet, before the conversation ends (0: never)")
-ap.add_argument("--device-buffer", type=float, default=0.4, help="seconds of reply audio the client can hold (its playback buffer plus its queue); the server never sends further ahead than a share of this. The Voice PE firmware holds about 0.4 s")
+ap.add_argument("--device-buffer", type=float, default=1.0, help="seconds of reply audio the client can hold (its playback buffer plus its queue); the server never sends further ahead than a share of this. The Voice PE firmware holds about 0.4 s")
 ap.add_argument("--max-hold", type=float, default=4.0, help="the longest, in seconds, a reply may be held back before it starts playing; how long is chosen from how fast the model has been and how the link has behaved")
 ap.add_argument("--mic-gain", type=float, default=None, help="a fixed multiplier for the incoming microphone audio; by default the gain follows the speech level")
 ap.add_argument("--state", action="store_true", help="also send {\"type\": \"state\", \"state\": ..., \"left\": ...} text frames saying what the conversation is doing (waiting, hearing, thinking, speaking, ignoring) and how much of the quiet before it ends is left, for a client with a status display")
