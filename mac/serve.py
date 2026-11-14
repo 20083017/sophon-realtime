@@ -23,6 +23,7 @@ ap.add_argument("--followup", type=float, default=6.0, help="seconds of quiet af
 ap.add_argument("--first", type=float, default=10.0, help="seconds of quiet after connecting, with no reply yet, before the conversation ends (0: never)")
 ap.add_argument("--prebuffer", type=float, default=0.8, help="seconds of reply audio to have ready before it starts playing (also after it has run dry), unless the reply is complete: the engine can generate speech at about the speed it is spoken, and a pause between words is worse than a late start")
 ap.add_argument("--mic-gain", type=float, default=1.0, help="multiplier for the incoming microphone audio, for a client whose microphone path is quiet (for example echo cancellation without gain control)")
+ap.add_argument("--prebuffer-max", type=float, default=4.0, help="the most seconds of reply audio to hold before it starts playing: the target doubles up to this after the reply runs dry mid-sentence, and halves back after a reply")
 ap.add_argument("--talk-over", action="store_true", help="keep listening while a reply plays, so speech over it interrupts it; only for a client that removes its own echo well")
 ap.add_argument("--echo-tail", type=float, default=0.8, help="seconds after the last reply audio was sent during which the microphone is still ignored: the client plays it later than it receives it, and the room rings on")
 ap.add_argument("--no-aec", action="store_true", help="do not cancel echo here (the client has a headset or does its own)")
@@ -72,9 +73,12 @@ async def handle(ws):
     async def send():
         step = int(a.rate * FRAME_S) * 2                    # bytes in one frame
         pending = collections.deque(); ends = 0.0           # loop time at which the audio already sent finishes playing
+        target = a.prebuffer                                # seconds to have ready before playing: grows after an underrun, shrinks after a reply
         while True:
             now = loop.time()
-            held = bool(pending) and ends <= now and len(pending) * FRAME_S < a.prebuffer and st["replying"]    # audio is not yet far enough ahead of its generation to start playing
+            if ends and not pending and not st["replying"] and now > ends + 1.0:      # a reply has finished and been played out
+                ends = 0.0; st["ends"] = 0.0; target = max(a.prebuffer, target / 2)
+            held = bool(pending) and ends <= now and len(pending) * FRAME_S < target and st["replying"]    # audio is not yet far enough ahead of its generation to start playing
             wait = (0.05 if held else ends - LEAD_S - now) if pending else None
             if wait is None or wait > 0:
                 try: m = await asyncio.wait_for(out.get(), wait)
@@ -92,11 +96,13 @@ async def handle(ws):
                 await ws.send(m)
             else:
                 pending.extend(m[i:i + step] for i in range(0, len(m), step))
-            held = bool(pending) and ends <= loop.time() and len(pending) * FRAME_S < a.prebuffer and st["replying"]
+            held = bool(pending) and ends <= loop.time() and len(pending) * FRAME_S < target and st["replying"]
             if pending and not held and loop.time() >= ends - LEAD_S:
                 f = pending.popleft(); await ws.send(f)
                 gap = loop.time() - ends
-                if ends > 0 and gap > 0.04 and a.log_events: print(json.dumps({"ev": "tx_gap", "gap_ms": round(gap * 1000), "pending": len(pending)}), flush=True)    # the client ran out of audio this long ago, as far as the server can tell
+                if ends > 0 and gap > 0.04:                  # the reply ran dry mid-sentence: the client ran out of audio this long ago, as far as the server can tell
+                    target = min(max(target * 2, a.prebuffer), a.prebuffer_max)
+                    if a.log_events: print(json.dumps({"ev": "tx_gap", "gap_ms": round(gap * 1000), "next_prebuffer_s": target}), flush=True)
                 start = max(ends, loop.time()); ends = start + len(f) / (2 * a.rate)
                 ref = np.frombuffer(f, "<i2").astype(np.float32) / 32768.0
                 played.append((start, ref if a.rate == SR else resample_poly(ref, SR, a.rate).astype(np.float32)))
