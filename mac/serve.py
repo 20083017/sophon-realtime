@@ -95,6 +95,8 @@ async def handle(ws):
             held = bool(pending) and ends <= loop.time() and len(pending) * FRAME_S < a.prebuffer and st["replying"]
             if pending and not held and loop.time() >= ends - LEAD_S:
                 f = pending.popleft(); await ws.send(f)
+                gap = loop.time() - ends
+                if ends > 0 and gap > 0.04 and a.log_events: print(json.dumps({"ev": "tx_gap", "gap_ms": round(gap * 1000), "pending": len(pending)}), flush=True)    # the client ran out of audio this long ago, as far as the server can tell
                 start = max(ends, loop.time()); ends = start + len(f) / (2 * a.rate)
                 ref = np.frombuffer(f, "<i2").astype(np.float32) / 32768.0
                 played.append((start, ref if a.rate == SR else resample_poly(ref, SR, a.rate).astype(np.float32)))
