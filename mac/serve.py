@@ -1,6 +1,6 @@
 """Sophon Realtime on a Mac, served over a WebSocket: a network device supplies the microphone and the speaker.
 
-The wire format is the simplest one a small device can speak. Binary frames are raw PCM16 mono audio at --rate, in both directions. A text frame {"type": "interrupt"} means "stop talking now": the server sends it when the user barges in, so the client can drop audio it has buffered, and a client may send it to cut the reply itself (a wake word spoken over the reply, for example). Reply audio is sent in 20 ms frames, no further ahead of real time than --lead: the engine produces speech faster than it is spoken, and a small device has no room to hold the difference. With --events the server also sends the engine's own events (reply_start, first_audio, reply_done, barge_in, ...) as text frames.
+The wire format is the simplest one a small device can speak. Binary frames are raw PCM16 mono audio at --rate, in both directions. A text frame {"type": "interrupt"} means "stop talking now": the server sends it when the user barges in, so the client can drop audio it has buffered, and a client may send it to cut the reply itself (a wake word spoken over the reply, for example). Reply audio is sent in 20 ms frames, no further ahead of real time than --lead: the engine produces speech faster than it is spoken, and a small device has no room to hold the difference. With --state it sends what the conversation is doing as {"type": "state", ...} frames, for a status display. With --events the server also sends the engine's own events (reply_start, first_audio, reply_done, barge_in, ...) as text frames.
 
 The speaker model is WeSpeaker's voxceleb_resnet34_LM.onnx (CC BY 4.0, huggingface.co/Wespeaker/wespeaker-voxceleb-resnet34-LM), needing the onnxruntime package. When it is present, the first voice heard after connecting is taken as the person who woke the device, and speech in other voices (a television, bystanders) is ignored: it starts no reply, does not keep the conversation open, and a reply it cut off is resumed. The conversation ends by itself, after --first seconds of quiet with no reply yet or --followup seconds after a reply has been played: the server sends {"type": "disconnect"} and closes, and the client goes back to waiting for its wake word. While a reply is generated, sent or played, and --echo-tail after, the microphone audio is replaced by silence (--talk-over turns that off), because a small speaker next to its microphone is heard at a level and delay no canceller here follows; a client interrupts a reply with its wake word or a text frame. The reply audio is also the reference for WebRTC echo cancellation on the incoming audio (--no-aec turns that off for a headset), so the reply is not heard as the user speaking. One conversation at a time: a second client is refused while one is connected.
 
@@ -25,6 +25,7 @@ ap.add_argument("--first", type=float, default=10.0, help="seconds of quiet afte
 ap.add_argument("--device-buffer", type=float, default=0.4, help="seconds of reply audio the client can hold (its playback buffer plus its queue); the server never sends further ahead than a share of this. The Voice PE firmware holds about 0.4 s")
 ap.add_argument("--max-hold", type=float, default=4.0, help="the longest, in seconds, a reply may be held back before it starts playing; how long is chosen from how fast the model has been and how the link has behaved")
 ap.add_argument("--mic-gain", type=float, default=None, help="a fixed multiplier for the incoming microphone audio; by default the gain follows the speech level")
+ap.add_argument("--state", action="store_true", help="also send {\"type\": \"state\", \"state\": ..., \"left\": ...} text frames saying what the conversation is doing (waiting, hearing, thinking, speaking, ignoring) and how much of the quiet before it ends is left, for a client with a status display")
 ap.add_argument("--talk-over", action="store_true", help="keep listening while a reply plays, so speech over it interrupts it; only for a client that removes its own echo well")
 ap.add_argument("--echo-tail", type=float, default=0.8, help="seconds after the last reply audio was sent during which the microphone is still ignored: the client plays it later than it receives it, and the room rings on")
 ap.add_argument("--no-aec", action="store_true", help="do not cancel echo here (the client has a headset or does its own)")
@@ -121,8 +122,9 @@ async def handle(ws):
             with sess.lock: speaking = sess.speech_ms > 0
             speaking_since = (speaking_since or now) if speaking else None
             user_busy = speaking_since is not None and now - speaking_since < MAX_UTT_S
-            if st["replying"] or st["pending"] or now < st["ends"] or user_busy: idle_since = now; continue
             limit = a.followup if st["replied"] else a.first
+            st["left"] = max(0.0, 1.0 - (now - idle_since) / limit) if limit > 0 else 1.0       # how much of the quiet before the conversation ends is left
+            if st["replying"] or st["pending"] or now < st["ends"] or user_busy: idle_since = now; st["left"] = 1.0; continue
             if limit > 0 and now - idle_since >= limit:
                 await ws.send(DISCONNECT); await ws.close(); return
 
@@ -144,7 +146,22 @@ async def handle(ws):
                                   "hold_s": round(PL.hold(), 2), "gain": round(a.mic_gain if a.mic_gain is not None else gain.gain, 2)}), flush=True)
             await asyncio.sleep(0.5)
 
-    sess = Session(brain, play, log=log, speaker=speaker, speaker_thr=a.speaker_threshold, dump_dir=a.dump_dir); sender = asyncio.ensure_future(send()); dog = asyncio.ensure_future(watchdog()); prober = asyncio.ensure_future(probe_link()); buf = np.zeros(0, np.float32)
+    def ring_state(now):
+        """What the conversation is doing, for a client's status display."""
+        if st["ends"] > 0 and now < st["ends"] + PL.lead(): return "speaking"                # audio is being sent, or still playing on the client
+        if st["replying"] or st["pending"]: return "thinking"                              # the model is working, or the reply is held until enough is ready
+        with sess.lock: heard, other = sess.speech_ms > 0, sess.bystander
+        return "ignoring" if other else "hearing" if heard else "waiting"
+
+    async def state_frames():
+        shown = None
+        while True:
+            state = ring_state(loop.time()); left = round(st.get("left", 1.0), 1) if state == "waiting" else 1.0
+            if (state, left) != shown:
+                shown = (state, left); await ws.send(json.dumps({"type": "state", "state": state, "left": left}))
+            await asyncio.sleep(0.1)
+
+    sess = Session(brain, play, log=log, speaker=speaker, speaker_thr=a.speaker_threshold, dump_dir=a.dump_dir); sender = asyncio.ensure_future(send()); dog = asyncio.ensure_future(watchdog()); prober = asyncio.ensure_future(probe_link()); stater = asyncio.ensure_future(state_frames()) if a.state else None; buf = np.zeros(0, np.float32)
     try:
         async for m in ws:
             if isinstance(m, str):
@@ -176,7 +193,7 @@ async def handle(ws):
             import time as _t; os.makedirs(a.dump_dir, exist_ok=True); stamp = _t.strftime("%H%M%S")
             for name, parts in (("mic", rec[0]), ("far", rec[1])):
                 np.save(os.path.join(a.dump_dir, f"{stamp}-{name}.npy"), np.concatenate(parts).astype(np.float32))
-        sender.cancel(); dog.cancel(); prober.cancel(); busy = False
+        sender.cancel(); dog.cancel(); prober.cancel(); stater and stater.cancel(); busy = False
 
 
 async def main():
