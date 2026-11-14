@@ -11,6 +11,7 @@ from scipy.signal import resample_poly
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path[:0] = [HERE, os.path.dirname(HERE)]
 from engine import Brain, Session, SR
 from aec import Echo
+from adapt import InputGain, Playout
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--root", default=os.environ.get("SOPHON_MODELS", os.path.join(os.path.dirname(HERE), "models")))
@@ -21,10 +22,9 @@ ap.add_argument("--rate", type=int, default=24000, help="sample rate of the clie
 ap.add_argument("--events", action="store_true", help="also send the engine's events to the client as text frames")
 ap.add_argument("--followup", type=float, default=6.0, help="seconds of quiet after a reply has been played before the conversation ends (0: never)")
 ap.add_argument("--first", type=float, default=10.0, help="seconds of quiet after connecting, with no reply yet, before the conversation ends (0: never)")
-ap.add_argument("--prebuffer", type=float, default=0.8, help="seconds of reply audio to have ready before it starts playing (also after it has run dry), unless the reply is complete: the engine can generate speech at about the speed it is spoken, and a pause between words is worse than a late start")
-ap.add_argument("--mic-gain", type=float, default=1.0, help="multiplier for the incoming microphone audio, for a client whose microphone path is quiet (for example echo cancellation without gain control)")
-ap.add_argument("--prebuffer-max", type=float, default=4.0, help="the most seconds of reply audio to hold before it starts playing: the target doubles up to this after the reply runs dry mid-sentence, and halves back after a reply")
-ap.add_argument("--lead", type=float, default=0.3, help="the most seconds reply audio is sent ahead of the moment the client plays it (default 0.3): more absorbs Wi-Fi jitter, but the client must have room to hold it")
+ap.add_argument("--device-buffer", type=float, default=0.4, help="seconds of reply audio the client can hold (its playback buffer plus its queue); the server never sends further ahead than a share of this. The Voice PE firmware holds about 0.4 s")
+ap.add_argument("--max-hold", type=float, default=4.0, help="the longest, in seconds, a reply may be held back before it starts playing; how long is chosen from how fast the model has been and how the link has behaved")
+ap.add_argument("--mic-gain", type=float, default=None, help="a fixed multiplier for the incoming microphone audio; by default the gain follows the speech level")
 ap.add_argument("--talk-over", action="store_true", help="keep listening while a reply plays, so speech over it interrupts it; only for a client that removes its own echo well")
 ap.add_argument("--echo-tail", type=float, default=0.8, help="seconds after the last reply audio was sent during which the microphone is still ignored: the client plays it later than it receives it, and the room rings on")
 ap.add_argument("--no-aec", action="store_true", help="do not cancel echo here (the client has a headset or does its own)")
@@ -41,6 +41,7 @@ INTERRUPT = json.dumps({"type": "interrupt"})
 DISCONNECT = json.dumps({"type": "disconnect"})
 MAX_UTT_S = 15.0             # speech running longer than this no longer keeps the conversation open
 FRAME_S = 0.02               # reply audio goes out in frames this long
+PL = Playout(a.device_buffer, a.max_hold)    # what the link and the model have been doing, kept across conversations
 busy = False
 
 
@@ -64,22 +65,23 @@ async def handle(ws):
         loop.call_soon_threadsafe(out.put_nowait, None if x is None else to_pcm(x))
 
     def log(m):
-        ev = json.loads(m).get("ev")
+        e = json.loads(m); ev = e.get("ev")
         if a.log_events: print(m, flush=True)
         if ev == "reply_start": st["replying"] = st["replied"] = st["fresh"] = True
-        elif ev == "reply_done": st["replying"] = False
+        elif ev == "reply_done":
+            st["replying"] = False
+            if e.get("audio_s") and e.get("sec"): loop.call_soon_threadsafe(PL.observe_reply, e["audio_s"], e["sec"], bool(e.get("cancelled")))    # on the loop: the controller is not thread safe
         if a.events: loop.call_soon_threadsafe(out.put_nowait, m)
 
     async def send():
         step = int(a.rate * FRAME_S) * 2                    # bytes in one frame
         pending = collections.deque(); ends = 0.0           # loop time at which the audio already sent finishes playing
-        target = a.prebuffer                                # seconds to have ready before playing: grows after an underrun, shrinks after a reply
         while True:
             now = loop.time()
             if ends and not pending and not st["replying"] and now > ends + 1.0:      # a reply has finished and been played out
-                ends = 0.0; st["ends"] = 0.0; target = max(a.prebuffer, target / 2)
-            held = bool(pending) and ends <= now and len(pending) * FRAME_S < target and st["replying"]    # audio is not yet far enough ahead of its generation to start playing
-            wait = (0.05 if held else ends - a.lead - now) if pending else None
+                ends = 0.0; st["ends"] = 0.0
+            held = bool(pending) and ends <= now and len(pending) * FRAME_S < PL.hold() and st["replying"]    # audio is not yet far enough ahead of its generation to start playing
+            wait = (0.05 if held else ends - PL.lead() - now) if pending else None
             if wait is None or wait > 0:
                 try: m = await asyncio.wait_for(out.get(), wait)
                 except asyncio.TimeoutError: m = b""
@@ -96,14 +98,14 @@ async def handle(ws):
                 await ws.send(m)
             else:
                 pending.extend(m[i:i + step] for i in range(0, len(m), step))
-            held = bool(pending) and ends <= loop.time() and len(pending) * FRAME_S < target and st["replying"]
-            if pending and not held and loop.time() >= ends - a.lead:
+            held = bool(pending) and ends <= loop.time() and len(pending) * FRAME_S < PL.hold() and st["replying"]
+            if pending and not held and loop.time() >= ends - PL.lead():
                 f = pending.popleft(); await ws.send(f)
                 if st.pop("fresh", False): ends = 0.0       # the first frame of a new reply: the time since the last one is silence between replies, not an underrun
                 gap = loop.time() - ends
                 if ends > 0 and gap > 0.04:                  # the reply ran dry mid-sentence: the client ran out of audio this long ago, as far as the server can tell
-                    target = min(max(target * 2, a.prebuffer), a.prebuffer_max)
-                    if a.log_events: print(json.dumps({"ev": "tx_gap", "gap_ms": round(gap * 1000), "next_prebuffer_s": target}), flush=True)
+                    PL.observe_stall(gap)
+                    if a.log_events: print(json.dumps({"ev": "tx_gap", "gap_ms": round(gap * 1000), "next_hold_s": round(PL.hold(), 2)}), flush=True)
                 start = max(ends, loop.time()); ends = start + len(f) / (2 * a.rate)
                 ref = np.frombuffer(f, "<i2").astype(np.float32) / 32768.0
                 played.append((start, ref if a.rate == SR else resample_poly(ref, SR, a.rate).astype(np.float32)))
@@ -126,7 +128,23 @@ async def handle(ws):
 
     echo = None if a.no_aec else Echo(a.delay_ms)
     rec = ([], []) if a.dump_dir else None
-    sess = Session(brain, play, log=log, speaker=speaker, speaker_thr=a.speaker_threshold, dump_dir=a.dump_dir); sender = asyncio.ensure_future(send()); dog = asyncio.ensure_future(watchdog()); buf = np.zeros(0, np.float32)
+    PL.new_link(); gain = InputGain()
+
+    async def probe_link():
+        """Round trips to the client, twice a second: the jitter of the link, which sets how far ahead audio can safely be sent. Also keeps the input gain
+        following the speech level, and with --log-events reports what the controllers have decided every ten seconds."""
+        n = 0
+        while True:
+            try: PL.observe_rtt(await asyncio.wait_for(await ws.ping(), 5))
+            except asyncio.TimeoutError: PL.observe_rtt(5.0)
+            n += 1
+            if n % 2 == 0: gain.update()
+            if a.log_events and n % 20 == 0:
+                print(json.dumps({"ev": "link", "rtt_p95_ms": round(sorted(PL.rtt)[int(0.95 * len(PL.rtt))] * 1000) if PL.rtt else None, "lead_s": round(PL.lead(), 2),
+                                  "hold_s": round(PL.hold(), 2), "gain": round(a.mic_gain if a.mic_gain is not None else gain.gain, 2)}), flush=True)
+            await asyncio.sleep(0.5)
+
+    sess = Session(brain, play, log=log, speaker=speaker, speaker_thr=a.speaker_threshold, dump_dir=a.dump_dir); sender = asyncio.ensure_future(send()); dog = asyncio.ensure_future(watchdog()); prober = asyncio.ensure_future(probe_link()); buf = np.zeros(0, np.float32)
     try:
         async for m in ws:
             if isinstance(m, str):
@@ -140,12 +158,14 @@ async def handle(ws):
             buf = np.concatenate([buf, x])
             while len(buf) >= FR:
                 f, buf = buf[:FR], buf[FR:]
-                if a.mic_gain != 1.0: f = np.clip(f * a.mic_gain, -1.0, 1.0)
                 now = loop.time(); far = np.zeros(FR, np.float32)
+                gated = not a.talk_over and (st["replying"] or st["pending"] or now < st["ends"] + a.echo_tail)
+                if not gated: gain.observe(float(np.sqrt(np.mean(f * f))))             # the room and the user, not the device's own voice
+                f = np.clip(f * (a.mic_gain if a.mic_gain is not None else gain.gain), -1.0, 1.0)
                 while played and played[0][0] + FRAME_S <= now: played.popleft()
                 if played and played[0][0] <= now: far[: min(FR, len(played[0][1]))] = played[0][1][:FR]
                 if rec is not None: rec[0].append(f); rec[1].append(far)
-                if not a.talk_over and (st["replying"] or st["pending"] or now < st["ends"] + a.echo_tail): f = np.zeros(FR, np.float32)
+                if gated: f = np.zeros(FR, np.float32)
                 sess.feed(f if echo is None else echo.process(f, far), far)
     except websockets.ConnectionClosed:
         pass
@@ -156,7 +176,7 @@ async def handle(ws):
             import time as _t; os.makedirs(a.dump_dir, exist_ok=True); stamp = _t.strftime("%H%M%S")
             for name, parts in (("mic", rec[0]), ("far", rec[1])):
                 np.save(os.path.join(a.dump_dir, f"{stamp}-{name}.npy"), np.concatenate(parts).astype(np.float32))
-        sender.cancel(); dog.cancel(); busy = False
+        sender.cancel(); dog.cancel(); prober.cancel(); busy = False
 
 
 async def main():
