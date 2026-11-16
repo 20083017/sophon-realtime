@@ -1,6 +1,6 @@
 #!/bin/bash
 # Sophon-Realtime-32B-E2E on vLLM-Omni — one-time install: Python 3.12 venv + vLLM 0.30 + vLLM-Omni 0.30 + the Sophon plugin.
-# usage: bash install.sh          env: PIP_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple (mirror)  SKIP_DOWNLOAD=1 (weights already in ./model)
+# usage: bash install.sh          env: SIZE=4B (the 4B model, one 32 GB GPU)  PIP_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple (mirror)  SKIP_DOWNLOAD=1 (weights already in ./model)
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); cd "$HERE"
 IDX=${PIP_INDEX:+--index-url $PIP_INDEX}
@@ -22,7 +22,7 @@ uv pip install $IDX torch==2.14.1 torchaudio==2.11.0 torchvision==0.29.2 ${TORCH
 # (base/ and adapters/ in the same repository belong to the own-engine deployment in ../scripts and are not needed here)
 if [ "${SKIP_DOWNLOAD:-0}" != 1 ] && [ ! -f model/talker220/config.json ]; then
   uv pip install $IDX modelscope
-  modelscope download --model AdventistsAI/Sophon-Realtime-32B-E2E --local_dir model --exclude 'base/*' 'adapters/*'
+  modelscope download --model ${MODEL_REPO:-AdventistsAI/Sophon-Realtime-${SIZE:-32B}-E2E} --local_dir model --exclude 'base/*' 'adapters/*'
 fi
 # voice cloning (1.3.0): two small models from the Tag release turn a reference clip into the decoder's prompt (~1 GB); skip with SKIP_CLONE=1
 if [ "${SKIP_DOWNLOAD:-0}" != 1 ] && [ "${SKIP_CLONE:-0}" != 1 ] && [ ! -f model/clone_frontend/talker/campplus.onnx ]; then

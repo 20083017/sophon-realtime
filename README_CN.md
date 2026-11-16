@@ -60,6 +60,7 @@ https://github.com/user-attachments/assets/4d6c74f5-3bbf-4dc2-8b11-f90ff85de4a2
 
 ## 最新进展
 
+- **2026-11-16 · v1.4：Sophon-Realtime 4B 版**——Tag、Flash、E2E 换上 4B 大脑，一张消费级显卡就能跑（Flash 24 GB；Tag、E2E 32 GB）。全双工接话和声音标签保留（Full-Duplex-Bench v1.0：Tag 94.3、E2E 92.3、Flash 87.7）；知识比 32B 少很多（VoiceBench 62.4）。[详情](#4b-版14-新增) · [Tag](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Tag) · [Flash](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash) · [E2E](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-E2E)
 - **2026-11-14 · 没有显卡也能用**：在线 API 开放试用，兼容 OpenAI Realtime，三个版本都能调用；注册就送 3 小时免费对话。[控制台](https://api.adventists.cn/console/) · [接口文档](https://api.adventists.cn/console/docs)
 - **2026-11-13 · Mac 版上线**：Flash-4bit 可以在 Apple 芯片的 Mac 上本地运行（MLX，推荐 36 GB 及以上内存），全双工，支持话轮判断、打断和回音消除；你说完约 1 秒开口。[mac/](mac/README_CN.md) · [权重](https://modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Flash-4bit-MLX)
 - **2026-11-13 · v1.2：长回复完整说完**，Tag、Flash、E2E 三个版本都不再限制语音时长；同时发布 **Flash-4bit**，一张 32 GB 显卡就能跑。[发布说明](https://github.com/adventists-ai/sophon-realtime/releases/tag/v1.2.0) · [Flash-4bit](flash/README_CN.md#flash-4bit一张-32-gb-显卡)
@@ -88,6 +89,20 @@ https://github.com/user-attachments/assets/4d6c74f5-3bbf-4dc2-8b11-f90ff85de4a2
 | 代码 | [`tag/`](tag/README_CN.md) | [`flash/`](flash/README_CN.md) | 自研引擎：[`docs/deploy_CN.md`](docs/deploy_CN.md) · vLLM-Omni：[`e2e/`](e2e/README_CN.md) |
 
 **怎么选？** 想让声音"会演"，先用 **Tag**；最看重单卡能接多少人，用 **Flash**；想要最快的首包、同时保留会笑会叹气的表现力，用 **E2E**。Tag 和 Flash 接口相同，之后可以随时切换；E2E 用自研引擎，1.1.4 起也可以用 vLLM-Omni 部署（接口与 Tag、Flash 相同）。
+
+### 4B 版（1.4 新增）
+
+同样三个版本，换上 4B 大脑（[DuplexJev-4B-Para](https://www.modelscope.cn/models/AdventistsAI/DuplexJev-4B-Para) 加写标签的适配器），一张消费级显卡就能跑。发声部分和音色与 32B 版相同；不收图片。
+
+| | **Tag-4B** | **Flash-4B** | **E2E-4B** |
+|---|---|---|---|
+| 显卡 | 一张 32 GB（占用约 27 GB） | 一张 24 GB（占用约 21 GB） | 一张 32 GB（占用约 31 GB） |
+| Full-Duplex-Bench v1.0（4 项平均；32B：94.0） | 94.3 | 87.7 | 92.3 |
+| 单路首包（RTX PRO 6000） | 0.40 秒 | 0.21 秒 | 0.31 秒 |
+| 安装 | `SIZE=4B bash install.sh` | `bash install.sh` + [权重](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash) | `SIZE=4B bash install.sh` |
+| 权重 | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Tag) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag) | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash) | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-E2E) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-E2E) |
+
+4B 大脑保留了对话能力（接话、附和、被打断就停、声音标签比例和标准答案一样），但知识和推理弱很多：VoiceBench 62.4（32B：82.8），Big Bench Audio 44.3%（32B：81.8%）。适合本地演示、陪伴和角色对话、话轮研究；需要回答准确时用 32B 版或[在线 API](https://api.adventists.cn/console/)。`start.sh` 识别到 4B 模型会自动选它的配置。
 
 ## 多语言
 

@@ -60,6 +60,7 @@ https://github.com/user-attachments/assets/1d9442ef-84b0-45a3-acd4-2d05a9562397
 
 ## News
 
+- **2026-11-16 · v1.4: Sophon-Realtime 4B** — Tag, Flash and E2E with a 4B brain, on one consumer GPU (Flash 24 GB; Tag and E2E 32 GB). Full-duplex turn-taking and sound tags carry over (Full-Duplex-Bench v1.0: Tag 94.3, E2E 92.3, Flash 87.7); much less knowledge than 32B (VoiceBench 62.4). [Details](#4b-builds-new-in-14) · [Tag](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag) · [Flash](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash) · [E2E](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-E2E)
 - **2026-11-14 · Try it without a GPU:** hosted API, OpenAI Realtime-compatible, with all three builds; sign up and get 3 hours of free voice chat. [Console](https://api.adventists.ai/console/) · [API docs](https://api.adventists.ai/console/docs)
 - **2026-11-13 · Sophon-Realtime on Mac:** Flash-4bit runs locally on Apple silicon (MLX, 36 GB+ recommended), full duplex with turn-taking, barge-in and echo cancellation; it starts speaking about 1 s after you stop. [mac/](mac/README.md) · [weights](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash-4bit-MLX)
 - **2026-11-13 · v1.2: long replies are spoken to the end** in Tag, Flash and E2E, however long they are; plus **Flash-4bit** for one 32 GB GPU. [Release notes](https://github.com/adventists-ai/sophon-realtime/releases/tag/v1.2.0) · [Flash-4bit](flash/README.md#flash-4bit-one-32-gb-gpu)
@@ -88,6 +89,20 @@ All three builds share the same brain: one 32B model that listens to your voice,
 | Code | [`tag/`](tag/README.md) | [`flash/`](flash/README.md) | own engine: [`docs/deploy.md`](docs/deploy.md) · vLLM-Omni: [`e2e/`](e2e/README.md) |
 
 **Which one?** Start with **Tag** if you want the voice to act. Pick **Flash** if the number of users per GPU matters most. Pick **E2E** for the fastest first audio with a voice that still laughs and sighs. Tag and Flash share the same APIs, so you can switch later; E2E runs on its own engine or, since 1.1.4, on vLLM-Omni with the same APIs as Tag and Flash.
+
+### 4B builds (new in 1.4)
+
+The same three builds with a 4B brain ([DuplexJev-4B-Para](https://huggingface.co/adventists-ai/DuplexJev-4B-Para) with a tag-writing adapter), for one consumer GPU. The speech stages and voices are the same as in the 32B builds; there is no image input.
+
+| | **Tag-4B** | **Flash-4B** | **E2E-4B** |
+|---|---|---|---|
+| GPU | one 32 GB (uses ~27 GB) | one 24 GB (uses ~21 GB) | one 32 GB (uses ~31 GB) |
+| Full-Duplex-Bench v1.0 (4-task avg; 32B: 94.0) | 94.3 | 87.7 | 92.3 |
+| First audio, one user (RTX PRO 6000) | 0.40 s | 0.21 s | 0.31 s |
+| Install | `SIZE=4B bash install.sh` | `bash install.sh` + [weights](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash) | `SIZE=4B bash install.sh` |
+| Weights | [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag) · [ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Tag) | [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash) · [ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash) | [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-E2E) · [ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-E2E) |
+
+The 4B brain keeps the conversation skills (turn-taking, back-channels, barge-in, sound tags at the same rate as the reference data) but knows and reasons much less: VoiceBench 62.4 (32B: 82.8), Big Bench Audio 44.3% (32B: 81.8%). Use it for local demos, companions and characters, and turn-taking research; use 32B or the [hosted API](https://api.adventists.ai/console/) when answers must be right. `start.sh` sees a 4B model and picks its config.
 
 ## Languages
 

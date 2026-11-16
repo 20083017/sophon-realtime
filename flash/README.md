@@ -44,6 +44,25 @@ bash stop.sh
 
 Voices: `chelsie` (default), `brand`; set `language` to `zh` or `en`.
 
+## 4B: one 24 GB GPU (new in 1.4.0)
+
+[Sophon-Realtime-4B-Flash](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash) ([ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash)) puts a 4B brain in front of the same speech stages and voices, so it runs on one 24 GB GPU (it uses about 21 GB).
+
+```bash
+bash install.sh
+modelscope download --model AdventistsAI/Sophon-Realtime-4B-Flash --local_dir ./model
+GPU=0 PORT=8000 bash start.sh   # sees the 4B model and picks config/sophon_realtime_flash_4b.yaml (8 conversations, no image input)
+```
+
+| | 4B | 32B (published) |
+|---|---|---|
+| Full-Duplex-Bench v1.0 (4-task avg) | 87.7 | 94.0 |
+| VoiceBench overall | 62.4 | 82.8 |
+| Big Bench Audio | 44.3% | 81.8% |
+| First audio, one user (RTX PRO 6000) | 0.21 s | — |
+
+The 4B brain keeps turn-taking, back-channels, barge-in and sound tags, but it knows and reasons much less than the 32B brain and can state wrong facts with confidence. Use it for local demos, companions and characters, and turn-taking research; use the 32B build when answers must be right. Details: [model card](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash).
+
 ## Flash-4bit: one 32 GB GPU
 
 [Sophon-Realtime-32B-Flash-4bit](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash-4bit) is this build with the thinker compressed to 4-bit

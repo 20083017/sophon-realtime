@@ -25,6 +25,24 @@ bash stop.sh
 - 已经下好权重：`SKIP_DOWNLOAD=1 bash install.sh`，启动时 `MODEL_DIR=/权重目录 bash start.sh`。
 - 音色：`chelsie`（默认，按语言自动选 `chelsie_zh` / `chelsie_en`）、`vivian_zh`、`ryan_en`、`brand_zh`、`brand_en`。
 
+## 4B 版：一张 32 GB 卡（1.4.0 新增）
+
+[Sophon-Realtime-4B-Tag](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Tag)（[HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag)）用 4B 大脑接同样的发声部分和音色，一张 32 GB 卡就能跑（占用约 27 GB）。
+
+```bash
+SIZE=4B bash install.sh
+GPU=0 PORT=8000 bash start.sh   # 识别到 4B 模型，自动用 config/sophon_realtime_tag_4b.yaml（8 路对话，不收图片）
+```
+
+| | 4B | 32B（已公布） |
+|---|---|---|
+| Full-Duplex-Bench v1.0（4 项平均） | 94.3 | 94.0 |
+| VoiceBench 总分 | 62.4 | 82.8 |
+| Big Bench Audio | 44.3% | 81.8% |
+| 单路首包（RTX PRO 6000） | 0.40 秒 | — |
+
+4B 大脑保留了接话、附和、被打断就停和声音标签，但知识和推理比 32B 弱很多，会很自信地说错事实。适合本地演示、陪伴和角色对话、话轮研究；需要回答准确时用 32B 版。详见[模型卡](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Tag)。
+
 ## 零样本音色克隆
 
 给一段任意声音的录音，就能让智子用这个声音和你对话。不用微调，不用重启。

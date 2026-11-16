@@ -8,6 +8,9 @@ import torch
 
 _T = None
 CUDNN_BENCH = os.environ.get("SOPHON_E2E_CUDNN_BENCHMARK", "1") == "1"
+# largest batch the adapter / decoder graphs are captured for; start.sh sets 8 for a 4B model (8 sessions), which roughly halves their memory
+DEC_MAXB = int(os.environ.get("SOPHON_E2E_DEC_MAXB", "16"))
+BKS = tuple(b for b in (1, 2, 4, 8, 16) if b <= DEC_MAXB)
 
 
 def engine_module():
@@ -91,7 +94,7 @@ class TalkerCore:
             torch.backends.cudnn.benchmark = CUDNN_BENCH       # as for the vocoder graphs in DecoderCore: only while capturing at start-up
             try:
                 for Tn in (3, 5, 7, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30):
-                    for B in ((1, 2, 4, 8, 16) if Tn == 30 else (1, 2, 4)):
+                    for B in (BKS if Tn == 30 else tuple(b for b in (1, 2, 4) if b <= DEC_MAXB)):
                         for _ in range(4): self.adg(torch.randn(B, Tn, D, device=dev))
             finally:
                 torch.backends.cudnn.benchmark = False
@@ -116,14 +119,14 @@ class DecoderCore:
             self.spk = {lg: V[f"spk.{lg}"].to(dev).float() for lg in ("zh", "en", "ja")}
             self.voices = {f"brand_{lg}": self.spk[lg] for lg in self.spk}; self.lock = threading.Lock()
             if not hasattr(T._ES.Stream, "gen0"): T._ES.Stream.gen0 = T._ES.Stream.gen
-            self.pool = []; EN.E2Batch.BK = (1, 2, 4, 8, 16); self.eb = EN.E2Batch(self)
+            self.pool = []; EN.E2Batch.BK = BKS; self.eb = EN.E2Batch(self)
             r = T.Render(self, "zh")
             _mem("decoder loaded", log)
             for B in EN.E2Batch.BK: EN._kvc_graph(self.eb, r.v2, B, 1 if r.v2.cfg == 0 else 2)
             _mem("kvc graphs", log)
             import graphs220 as G
             self.adg = None
-            self.hg = G.HiftGraph(self.hift, max_b=16)
+            self.hg = G.HiftGraph(self.hift, max_b=BKS[-1])
 
             def _mk(B, Tw):
                 rs = []
@@ -134,7 +137,7 @@ class DecoderCore:
             # choice is 4-10x slower on RTX PRO 6000 (Blackwell) and about equal on H100. Only here, at start-up, never while serving.
             torch.backends.cudnn.benchmark = CUDNN_BENCH
             try:
-                self.hg.warm(_mk, Tws=(56,), Bs=(1, 2, 4, 8, 16)); self.hg.warm(_mk, Tws=(16, 32, 48), Bs=(1, 2, 4, 8, 16))
+                self.hg.warm(_mk, Tws=(56,), Bs=BKS); self.hg.warm(_mk, Tws=(16, 32, 48), Bs=BKS)
             finally:
                 torch.backends.cudnn.benchmark = False
             _mem("hift graphs", log); torch.cuda.empty_cache(); _mem("after empty_cache", log)

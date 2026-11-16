@@ -34,6 +34,24 @@ bash stop.sh
   The start-up log then shows one warning that `vllm.third_party.deep_gemm` failed to import; that module is not used by this model.
 - One built-in voice (`chelsie`), Chinese and English; any other voice by zero-shot cloning (below).
 
+## 4B: one 32 GB GPU (new in 1.4.0)
+
+[Sophon-Realtime-4B-E2E](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-E2E) ([ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-E2E)) puts a 4B brain in front of the same speech stages and voices, so it runs on one 32 GB GPU (it uses about 31 GB).
+
+```bash
+SIZE=4B bash install.sh
+GPU=0 PORT=8000 bash start.sh   # sees the 4B model and picks config/sophon_realtime_e2e_4b.yaml (8 conversations, no image input)
+```
+
+| | 4B | 32B (published) |
+|---|---|---|
+| Full-Duplex-Bench v1.0 (4-task avg) | 92.3 | 94.0 |
+| VoiceBench overall | 62.4 | 82.8 |
+| Big Bench Audio | 44.3% | 81.8% |
+| First audio, one user (RTX PRO 6000) | 0.31 s | — |
+
+The 4B brain keeps turn-taking, back-channels, barge-in and sound tags, but it knows and reasons much less than the 32B brain and can state wrong facts with confidence. Use it for local demos, companions and characters, and turn-taking research; use the 32B build when answers must be right. Details: [model card](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-E2E).
+
 ## Zero-shot voice cloning (new in 1.3.0)
 
 Give the server a short clip of the voice you want and use its name like the built-in voice. No fine-tuning, no restart.

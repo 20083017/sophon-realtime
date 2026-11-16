@@ -27,6 +27,24 @@ bash stop.sh
 - Weights already downloaded: `SKIP_DOWNLOAD=1 bash install.sh`, then `MODEL_DIR=/path/to/Sophon-Realtime-32B-Tag bash start.sh`.
 - Voices: `chelsie` (default; `chelsie_zh` / `chelsie_en` picked by language), `vivian_zh`, `ryan_en`, `brand_zh`, `brand_en`.
 
+## 4B: one 32 GB GPU (new in 1.4.0)
+
+[Sophon-Realtime-4B-Tag](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag) ([ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Tag)) puts a 4B brain in front of the same speech stages and voices, so it runs on one 32 GB GPU (it uses about 27 GB).
+
+```bash
+SIZE=4B bash install.sh
+GPU=0 PORT=8000 bash start.sh   # sees the 4B model and picks config/sophon_realtime_tag_4b.yaml (8 conversations, no image input)
+```
+
+| | 4B | 32B (published) |
+|---|---|---|
+| Full-Duplex-Bench v1.0 (4-task avg) | 94.3 | 94.0 |
+| VoiceBench overall | 62.4 | 82.8 |
+| Big Bench Audio | 44.3% | 81.8% |
+| First audio, one user (RTX PRO 6000) | 0.40 s | — |
+
+The 4B brain keeps turn-taking, back-channels, barge-in and sound tags, but it knows and reasons much less than the 32B brain and can state wrong facts with confidence. Use it for local demos, companions and characters, and turn-taking research; use the 32B build when answers must be right. Details: [model card](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag).
+
 ## Zero-shot voice cloning
 
 Give it a short clip of any voice and talk to Sophon in that voice. No fine-tuning, no restart.

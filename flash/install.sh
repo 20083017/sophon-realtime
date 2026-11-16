@@ -1,6 +1,6 @@
 #!/bin/bash
 # Sophon-Realtime-32B-Flash (vLLM-Omni) — one-time install: Python 3.12 venv + vLLM 0.30 + vLLM-Omni 0.30 + the Sophon plugin.
-# usage: bash install.sh          env: PIP_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple (mirror)
+# usage: bash install.sh          env: SIZE=4B (the 4B model, one 24 GB GPU)  PIP_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple (mirror)
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd); cd "$HERE"
 IDX=${PIP_INDEX:+--index-url $PIP_INDEX}

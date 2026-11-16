@@ -4,6 +4,14 @@ One version number for the whole Sophon-Realtime v1 family: the code in this rep
 ModelScope (git tags with the same name) and the `sophon-realtime` package on PyPI. Each entry says which builds changed.
 Second digit: new features or new weights; third digit: fixes only.
 
+## 1.4.0 (2026-11-16): Sophon-Realtime 4B
+
+- **New weights: the three builds with a 4B brain**, for one consumer GPU: [Sophon-Realtime-4B-Tag](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag), [-4B-Flash](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash) and [-4B-E2E](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-E2E) (also on ModelScope), tagged `v1.4.0`. The brain is DuplexJev-4B-Para with a tag-writing adapter merged in (bf16, speech only, no vision); the speech stages and voices are the 32B builds' files, unchanged.
+- Measured on one RTX PRO 6000 held to the memory of the target card: Flash-4B fits one 24 GB GPU (about 21 GB), Tag-4B and E2E-4B one 32 GB GPU (about 27 and 31 GB). Full-Duplex-Bench v1.0 (4-task avg): Tag 94.3, E2E 92.3, Flash 87.7 (32B: 94.0). VoiceBench 62.4 (32B: 82.8), Big Bench Audio 44.3% (32B: 81.8%): the 4B brain keeps the conversation skills but knows and reasons much less. First audio for one user: Flash 0.21 s, E2E 0.31 s, Tag 0.40 s. Sound tags on held-out conversations: 0.36 of replies, the same as the reference data.
+- Install: `SIZE=4B bash install.sh` in `tag/` or `e2e/`; for Flash, `bash install.sh` and download `AdventistsAI/Sophon-Realtime-4B-Flash` into `./model`. `start.sh` recognises a 4B thinker and picks the new `config/sophon_realtime_<build>_4b.yaml` (8 conversations; `CONFIG=` still overrides).
+- To fit the smaller cards, two new settings (defaults unchanged for 32B): Tag's TensorRT flow profile is built for batches up to 8 instead of 16 with a 4B model (`SOPHON_FLOW_MAXB`), and E2E's adapter and vocoder graphs are captured for batches up to 8 (`SOPHON_E2E_DEC_MAXB`, new in `e2e/plugin/sophon_realtime/bridge220.py`; larger batches run in chunks or without a graph). E2E-4B also uses 8 talker slots.
+- All parts carry 1.4.0. The 32B weights did not change and get no new tag. `sophon-realtime` on PyPI stays at 1.3.0 (the Tag plugin's code is unchanged apart from the version).
+
 ## 1.3.0 (2026-11-14): voice cloning in E2E
 
 - **E2E now clones voices, like Tag and Flash.** Put a 5–12 s clip of one speaker in `e2e/model/voices/<name>.wav` (or `.flac`) and use `"voice": "<name>"` in `/v1/chat/completions` or `/v1/realtime`; no fine-tuning, no restart ([how](e2e/README.md#zero-shot-voice-cloning-new-in-130)). The decoder takes the clip as its reference prompt: its speech tokens, mel frames and speaker embedding, computed with the same recipe as Tag's voice files. The prompt has the same length as the built-in one, so the decoder runs exactly as before; first audio is unchanged. A clip that is too short or cannot be read falls back to the built-in voice.

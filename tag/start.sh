@@ -8,7 +8,10 @@ GPU=${GPU:-0}; PORT=${PORT:-8000}; PY=$HERE/.venv/bin; MODEL_DIR=${MODEL_DIR:-$H
 [ -f logs/server_$PORT.pid ] && PORT=$PORT bash stop.sh >/dev/null 2>&1
 DEV=$GPU
 case "$GPU" in *,*) MPS=0;; esac
-CONFIG=${CONFIG:-sophon_realtime_tag_1gpu.yaml}
+# a 4B model (Sophon-Realtime-4B-Tag) gets the one-32-GB-GPU config unless CONFIG says otherwise
+grep -q '"hidden_size": 2560' "${MODEL_DIR:-$HERE/model}/thinker/config.json" 2>/dev/null && IS4B=1
+SUF=1gpu; [ -n "$IS4B" ] && SUF=4b
+CONFIG=${CONFIG:-sophon_realtime_tag_$SUF.yaml}
 # vLLM compiles a few kernels at the first start (several minutes) and caches them. Keep the cache with this install: the default
 # cache in ~/.cache is shared by every vLLM install of the user, and installs with different paths rebuild it at each start.
 export FLASHINFER_WORKSPACE_BASE=${FLASHINFER_WORKSPACE_BASE:-$HERE}
@@ -21,7 +24,7 @@ TRT=${TRT:-auto}; [ "$TRT" = auto ] && { $PY/python -c "import tensorrt" 2>/dev/
 [ "$TRT" = 0 ] && echo "WARNING: TensorRT is off (not installed?): the voice runs in plain PyTorch, about 3x slower under load. Re-run install.sh without NO_TRT=1."
 sed "s#__HERE__#$HERE#g" config/$CONFIG > logs/deploy_$PORT.yaml
 # tag-tts v1.3: distilled flow, 4 steps, no CFG; several requests' flow chunks share one TensorRT call
-export SOPHON_FLOW_STEPS=${SOPHON_FLOW_STEPS:-4} SOPHON_FLOW_CFG=${SOPHON_FLOW_CFG:-0} SOPHON_FLOW_ONNX=${SOPHON_FLOW_ONNX:-$MODEL_DIR/talker/flow.decoder.estimator.fp32.onnx} COSYVOICE3_BATCH_FLOW=${COSYVOICE3_BATCH_FLOW:-1} SOPHON_FLOW_MAXB=${SOPHON_FLOW_MAXB:-16}
+export SOPHON_FLOW_STEPS=${SOPHON_FLOW_STEPS:-4} SOPHON_FLOW_CFG=${SOPHON_FLOW_CFG:-0} SOPHON_FLOW_ONNX=${SOPHON_FLOW_ONNX:-$MODEL_DIR/talker/flow.decoder.estimator.fp32.onnx} COSYVOICE3_BATCH_FLOW=${COSYVOICE3_BATCH_FLOW:-1} SOPHON_FLOW_MAXB=${SOPHON_FLOW_MAXB:-$([ -n "$IS4B" ] && echo 8 || echo 16)}
 SOPHON_MODEL=$MODEL_DIR SOPHON_PORT=$PORT SOPHON_BRIDGE_PORT=${SOPHON_BRIDGE_PORT:-$((PORT+700))} VLLM_DISABLE_COMPILE_CACHE=1 COSYVOICE3_TRT=$TRT CUDA_VISIBLE_DEVICES=$DEV PATH=$PY:$PATH \
   setsid nohup $PY/vllm serve $MODEL_DIR --omni --port $PORT --trust-remote-code --init-timeout 3000 --stage-init-timeout 3000 --deploy-config logs/deploy_$PORT.yaml > logs/server_$PORT.log 2>&1 < /dev/null &
 echo $! > logs/server_$PORT.pid

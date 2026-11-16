@@ -7,7 +7,10 @@ HERE=$(cd "$(dirname "$0")" && pwd); cd "$HERE"; mkdir -p logs
 GPU=${GPU:-0}; PORT=${PORT:-8000}; PY=$HERE/.venv/bin
 [ -f logs/server_$PORT.pid ] && PORT=$PORT bash stop.sh >/dev/null 2>&1
 DEV=$GPU
-CONFIG=${CONFIG:-sophon_realtime_flash_1gpu.yaml}
+# a 4B model (Sophon-Realtime-4B-Flash) gets the one-24-GB-GPU config unless CONFIG says otherwise
+grep -q '"hidden_size": 2560' "${MODEL_DIR:-$HERE/model}/thinker/config.json" 2>/dev/null && IS4B=1
+SUF=1gpu; [ -n "$IS4B" ] && SUF=4b
+CONFIG=${CONFIG:-sophon_realtime_flash_$SUF.yaml}
 # vLLM compiles a few kernels at the first start (several minutes) and caches them. Keep the cache with this install: the default
 # cache in ~/.cache is shared by every vLLM install of the user, and installs with different paths rebuild it at each start.
 export FLASHINFER_WORKSPACE_BASE=${FLASHINFER_WORKSPACE_BASE:-$HERE}

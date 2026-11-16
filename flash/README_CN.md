@@ -43,6 +43,25 @@ bash stop.sh
 
 音色：`chelsie`（默认）、`brand`；语言用 `language` 指定（`zh` / `en`）。
 
+## 4B 版：一张 24 GB 卡（1.4.0 新增）
+
+[Sophon-Realtime-4B-Flash](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash)（[HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash)）用 4B 大脑接同样的发声部分和音色，一张 24 GB 卡就能跑（占用约 21 GB）。
+
+```bash
+bash install.sh
+modelscope download --model AdventistsAI/Sophon-Realtime-4B-Flash --local_dir ./model
+GPU=0 PORT=8000 bash start.sh   # 识别到 4B 模型，自动用 config/sophon_realtime_flash_4b.yaml（8 路对话，不收图片）
+```
+
+| | 4B | 32B（已公布） |
+|---|---|---|
+| Full-Duplex-Bench v1.0（4 项平均） | 87.7 | 94.0 |
+| VoiceBench 总分 | 62.4 | 82.8 |
+| Big Bench Audio | 44.3% | 81.8% |
+| 单路首包（RTX PRO 6000） | 0.21 秒 | — |
+
+4B 大脑保留了接话、附和、被打断就停和声音标签，但知识和推理比 32B 弱很多，会很自信地说错事实。适合本地演示、陪伴和角色对话、话轮研究；需要回答准确时用 32B 版。详见[模型卡](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash)。
+
 ## Flash-4bit：一张 32 GB 显卡
 
 [Sophon-Realtime-32B-Flash-4bit](https://modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Flash-4bit) 是把本版本的思考器压成 4 位权重的版本，
