@@ -4,6 +4,12 @@ One version number for the whole Sophon-Realtime v1 family: the code in this rep
 ModelScope (git tags with the same name) and the `sophon-realtime` package on PyPI. Each entry says which builds changed.
 Second digit: new features or new weights; third digit: fixes only.
 
+## 1.4.1 (2026-11-18): longer idle timeout for realtime sessions
+
+- **Realtime sessions are no longer cut off after 60 s of continuous speech on Flash.** vLLM-Omni 0.30 restarts a session's idle timer on model output, model appends, heartbeats and playback acks, but not on incoming audio. So when the user kept talking without a reply (a long monologue, dictation, a listen-only mode), the session closed after `idle_ttl_s`: 60 s on Flash, 300 s on Tag and E2E. Reported in [#10](https://github.com/adventists-ai/sophon-realtime/issues/10); the root fix belongs in vLLM-Omni and has been reported there.
+- Until then, the default `idle_ttl_s` is now 600 s for the one-GPU configs of all three builds (was 60 s for Flash, 300 s for Tag and E2E) and 300 s for the small-GPU configs (4B builds and Flash-4bit, which keep 8 session slots; was 60 s for Flash). A session whose client disappears without closing keeps its slot until this timeout, which is why the small-GPU configs stay shorter. Set `idle_ttl_s` in your config to change it (`null` turns idle expiry off).
+- Config-only change. All parts carry 1.4.1; no weights changed, so the weight repositories get no new tag. PyPI stays at 1.3.0.
+
 ## 1.4.0 (2026-11-16): Sophon-Realtime 4B
 
 - **New weights: the three builds with a 4B brain**, for one consumer GPU: [Sophon-Realtime-4B-Tag](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag), [-4B-Flash](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash) and [-4B-E2E](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-E2E) (also on ModelScope), tagged `v1.4.0`. The brain is DuplexJev-4B-Para with a tag-writing adapter merged in (bf16, speech only, no vision); the speech stages and voices are the 32B builds' files, unchanged.
