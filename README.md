@@ -60,6 +60,7 @@ https://github.com/user-attachments/assets/1d9442ef-84b0-45a3-acd4-2d05a9562397
 
 ## News
 
+- **2026-11-19 · SillyTavern plugin:** call your character in real time from SillyTavern, with interruptions, a cloned voice per character and the call written back into the chat; your own GPU (4B on one 24 GB card) or the API. [sophon-sillytavern](https://github.com/adventists-ai/sophon-sillytavern) · [demo](https://x.com/BKJinAI/status/2123275865257807933)
 - **2026-11-18 · v1.5: 4B on smaller machines** — [Tag-4B-W4](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag-W4) runs on one 24 GB GPU (4-bit brain, about 21 GB; speech and sound tags unchanged), and [Mac 4B](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash-MLX) on Apple silicon Macs with 16 GB (MLX; it starts speaking 0.3–0.5 s after you stop). [Details](#smaller-machines-new-in-15)
 - **2026-11-16 · v1.4: Sophon-Realtime 4B** — Tag, Flash and E2E with a 4B brain, on one consumer GPU (Flash 24 GB; Tag and E2E 32 GB). Full-duplex turn-taking and sound tags carry over (Full-Duplex-Bench v1.0: Tag 94.3, E2E 92.3, Flash 87.7); much less knowledge than 32B (VoiceBench 62.4). [Details](#4b-builds-new-in-14) · [Tag](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag) · [Flash](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash) · [E2E](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-E2E)
 - **2026-11-14 · Try it without a GPU:** hosted API, OpenAI Realtime-compatible, with all three builds; sign up and get 3 hours of free voice chat. [Console](https://api.adventists.ai/console/) · [API docs](https://api.adventists.ai/console/docs)
@@ -67,10 +68,10 @@ https://github.com/user-attachments/assets/1d9442ef-84b0-45a3-acd4-2d05a9562397
 - **2026-11-13 · v1.2: long replies are spoken to the end** in Tag, Flash and E2E, however long they are; plus **Flash-4bit** for one 32 GB GPU. [Release notes](https://github.com/adventists-ai/sophon-realtime/releases/tag/v1.2.0) · [Flash-4bit](flash/README.md#flash-4bit-one-32-gb-gpu)
 - **2026-11-11 · v1.1: zero-shot voice cloning** in Tag and Flash: a few seconds of audio and it talks to you in that voice, in real time. [Watch the demo](#zero-shot-voice-cloning-new-in-v11)
 - **2026-11-11 · E2E becomes a full build on one GPU**, with first audio in about 0.25 s; it can also be served by vLLM-Omni like Tag and Flash. [Details](#e2e)
-- **2026-11-09 · Try it online** on [ModelScope Studio](https://www.modelscope.ai/studios/AdventistsAI/Sophon-Realtime), and **Live mode** (OpenAI GPT-Live compatible: hands lookups to your own backend while it keeps talking) is open source. [Live mode](live/README.md)
 
 <details><summary>Older news</summary>
 
+- **2026-11-09 · Try it online** on [ModelScope Studio](https://www.modelscope.ai/studios/AdventistsAI/Sophon-Realtime), and **Live mode** (OpenAI GPT-Live compatible: hands lookups to your own backend while it keeps talking) is open source. [Live mode](live/README.md)
 - **2026-11-08 · v1.0:** first open-source release of the Tag, Flash and E2E builds.
 
 </details>
@@ -232,6 +233,10 @@ E2E can be served in two ways, with the same weights and the same voice: by our 
 ## Fine-tuning
 
 Adapt the brain (persona, tone, domain knowledge, tool use) with LoRA in [ms-swift](https://github.com/modelscope/ms-swift) on one 80 GB GPU. The voice, expressive sound tags and turn-taking are kept. See [finetune/](finetune/README.md).
+
+## Integrations
+
+- **[SillyTavern](https://github.com/adventists-ai/sophon-sillytavern)**: full-duplex voice calls with your character. Install from SillyTavern → Extensions → Install extension; point it at your own Sophon-Realtime server or the API.
 
 ## From the same team
 
