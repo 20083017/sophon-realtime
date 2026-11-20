@@ -120,3 +120,8 @@ License: code Apache-2.0; model weights Apache-2.0, see `NOTICE` for sources.
 See the [910C HTTP deployment notes](../community/ascend/README.md) for the
 community-maintained BF16 TP2 recipe, tested environment, validation results,
 and limitations. The core maintainers do not have Ascend hardware to test it.
+
+## HTTP audio benchmarking
+
+See [benchmark usage and metric definitions](docs/benchmark_http.md) for single-input,
+manifest-based, concurrent and staggered-arrival workloads. This is not a duplex benchmark.
