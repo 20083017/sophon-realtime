@@ -103,4 +103,8 @@ python client_example.py --wav 我的问题.wav --lang zh --voice alice
 - `plugin/`：vLLM-Omni 插件（`sophon_realtime`）。三段：思考器（听、写、判话轮）→ tag-tts 说话段（边收字边出语音 token）→ flow + HiFT 声码器（TensorRT，多路合批）。
 - `config/`：部署配置、系统提示、VAD 模型。`start.sh` 默认开 CUDA MPS，让三段同时用卡。
 
+## 社区指南
+
+- [NVIDIA DGX Spark 部署](../community/dgx-spark/README_CN.md)（社区用户 Takshzoe 贡献，维护者未验证）。
+
 许可：Apache-2.0。

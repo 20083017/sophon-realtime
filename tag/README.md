@@ -111,4 +111,8 @@ python client_example.py --wav my_question.wav --lang en --voice alice
   talker (speech tokens, fed text while it is being written) → flow + HiFT vocoder (TensorRT, chunks of several users batched).
 - `config/`: deploy config, system prompt, VAD model. `start.sh` turns on CUDA MPS so the three stages share the GPU.
 
+## Community guides
+
+- [NVIDIA DGX Spark](../community/dgx-spark/README.md) (contributed by Takshzoe; not verified by the maintainers).
+
 License: Apache-2.0.
