@@ -340,6 +340,13 @@ class SophonBuffer(PcmAppendBuffer):
     def has_pending(self): return bool(self.utt)
     def has_reserved(self): return bool(self.reservations)
 
+    def _quiet_out(self):
+        """No reply is being generated or still playing (a say waits for the current reply instead of cutting it)."""
+        if self.owner_active is not None and self.owner_active(id(self)) is not None:
+            return False
+        lp = self.last_play
+        return lp is None or time.monotonic() >= lp["t0"] + lp["dur"]
+
     def _res(self, op, payload):
         r = _Res(self, op, payload); r.t0 = time.monotonic(); self.reservations.append(r)
         if payload is not None: self.inflight_t = r.t0
@@ -417,7 +424,7 @@ class SophonBuffer(PcmAppendBuffer):
                     r.rollback()
             if self.inflight_t and now - self.inflight_t > 3.0:
                 self.inflight_t = 0.0
-            if self.say_q and self.speech_ms == 0 and allow_emit and not self.reservations and not self.inflight_t:
+            if self.say_q and self.speech_ms == 0 and allow_emit and not self.reservations and not self.inflight_t and self._quiet_out():
                 text = self.say_q.pop(0); self.prev_user = None; self.t_reply = time.monotonic()
                 p = {"audio": base64.b64encode(np.zeros(SR // 10, np.float32).tobytes()).decode(), "format": "pcm_f32le", "sample_rate_hz": SR,
                      "is_speech": True, "sophon_kind": "reply", "sophon_buf": id(self), "lang": self.lang, "say": text}

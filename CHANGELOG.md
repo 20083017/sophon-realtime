@@ -4,6 +4,13 @@ One version number for the whole Sophon-Realtime v1 family: the code in this rep
 ModelScope (git tags with the same name) and the `sophon-realtime` package on PyPI. Each entry says which builds changed.
 Second digit: new features or new weights; third digit: fixes only.
 
+## 1.6.1 (2026-11-22): say waits for the current reply
+
+- **`say` no longer cuts a reply that is still being spoken.** It now waits until the current reply has been generated and played (and the caller is silent). On E2E, whose replies take longer to generate, a `say` sent right after a tool answer used to cut that answer.
+- **`"interruptible": false` holds the caller's audio until the sentence has been played**, not just generated. The server generates speech faster than real time, so releasing the audio at the end of generation let the caller barge in during playback.
+- Verified on E2E, Flash and Tag: a `say` sent right after a long answer comes after it, and the answer is no longer cut. A non-interruptible `say` plays to the end while the caller talks over it, and the caller is answered right after. An interruptible one is cut when the caller talks.
+- The plugins and the Live gateway carry 1.6.1.
+
 ## 1.6.0 (2026-11-22): speak a given sentence, change instructions mid-call
 
 - **New: `say` on the OpenAI Realtime face** ([#15](https://github.com/adventists-ai/sophon-realtime/issues/15)). `response.create` with `{"response": {"say": "..."}}` speaks exactly that text in the session voice as the next reply, streams it like any reply and keeps it in the conversation history; `"interruptible": false` holds the caller's audio back until it has been spoken. The thinker is constrained to write exactly that text, so the speech stage, voice and sound handling are the normal ones. Lets agent frameworks implement `say()` (recording notices, read-backs, confirmations). Gateways and other clients can also call the tool bridge directly: `POST /bridge/<key>/say {"text": ...}`. See [live/README.md](live/README.md#openai-realtime-face-livekit-and-pipecat).

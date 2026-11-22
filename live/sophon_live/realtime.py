@@ -291,7 +291,8 @@ class RealtimeSession:
             a = self.resample(x, rate, 16000)
             self.last_client_audio = time.monotonic()
             if self.hold is not None:                          # a non-interruptible say is playing: keep the caller's audio for later
-                if self.hold["done"]:
+                h = self.hold
+                if h["done"] and time.monotonic() >= h.get("t_first", 0) + h.get("audio_s", 0) + 0.3:   # played to the end
                     await self._release_hold()
                 else:
                     self.held.append(a); await self.engine.send_audio(np.zeros_like(a)); return
@@ -364,7 +365,7 @@ class RealtimeSession:
             self.hold = None
             await self._finish(r, "failed")
             return await self.error("this engine does not support response.say (needs the Flash / Tag / E2E plugin 1.6.0+)", "unsupported", ev.get("event_id"))
-        r["empty_timer"] = asyncio.get_running_loop().call_later(20.0, lambda: asyncio.ensure_future(self._finish_if_empty(r)))
+        r["empty_timer"] = asyncio.get_running_loop().call_later(60.0, lambda: asyncio.ensure_future(self._finish_if_empty(r)))
         log.info("realtime %s: say %r interruptible=%s", self.id, text[:80], rq.get("interruptible", True))
 
     async def _release_hold(self) -> None:
@@ -662,6 +663,8 @@ class RealtimeSession:
                 await self._begin_message(r)
                 base = {"response_id": r["id"], "item_id": r["item_id"], "output_index": 0, "content_index": 0}
                 if t == "audio":
+                    if r.get("say") is not None:                # playback clock of a say (non-interruptible hold ends when it has been played)
+                        r.setdefault("t_first", time.monotonic()); r["audio_s"] = r.get("audio_s", 0.0) + e["pcm"].size / e["sr"]
                     x = self.resample(e["pcm"], e["sr"], self.out_fmt[1])
                     step = self.out_fmt[1] // 10                # 100 ms deltas
                     for i in range(0, x.size, step):
