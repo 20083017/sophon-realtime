@@ -37,6 +37,16 @@ GPT-Live 客户端连 `ws://HOST:8780/v1/live/sessions` 即可；浏览器打开
 
 需要鉴权时设置 `SOPHON_LIVE_REALTIME_KEYS_FILE`（每行一个 key），`/v1/realtime` 就会要求 bearer key。
 
+**念一句指定的话（`say`，扩展事件）。** 应用自己掌握的固定内容（录音提示、保存前复述、确认）可以用会话音色原样念出来：
+
+```json
+{"type": "response.create", "response": {"say": "本次通话将被录音。", "interruptible": true}}
+```
+
+等用户不说话时作为下一条回复原样念出，按普通回复下发音频和文字，并写进对话历史（模型知道这句话说过）。`"interruptible": false` 时，念完之前用户的声音先暂存（不会打断），念完后再交给模型。需要 Flash / Tag / E2E 插件 1.6.0 及以上；语音智能体框架可以用它实现 `say()`。
+
+**通话中途改指令和工具。** `session.update` 里的新 `instructions`、`tools` 从下一条回复起生效，模型说过话之后也可以改。出声后不能再换音色；引擎拒绝更新时会收到 `error` 事件，而不是 `session.updated`。
+
 ## 实测（单张 H100，模拟后端，14 条录音）
 
 | 引擎 | 该委派的：委派并转述结果 | 不该委派的：直接回答 | 首包（直接答 / 委派） |

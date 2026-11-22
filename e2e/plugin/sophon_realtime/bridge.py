@@ -3,6 +3,7 @@
 Engine-agnostic contract (the same two calls are implemented by every engine adapter):
   GET  /bridge/<key>/events?wait=<s>   -> {"events": [{"type": "tool_call", "call_id", "name", "arguments"}]}  (long poll)
   POST /bridge/<key>/result            <- {"call_id": str|null, "output": str, "speak": bool}
+  POST /bridge/<key>/say               <- {"text": str}   speak this text verbatim in the session voice (kept in history)
 <key> is the session's extra_body.bridge_key. Enabled when SOPHON_BRIDGE_PORT is set; binds 127.0.0.1 only."""
 from __future__ import annotations
 
@@ -17,8 +18,9 @@ PORT = int(os.environ.get("SOPHON_BRIDGE_PORT", "0") or 0)
 
 
 class Bridge:
-    def __init__(self, on_result):
+    def __init__(self, on_result, on_say=None):
         self.on_result = on_result                 # (key, call_id, output, speak) -> bool
+        self.on_say = on_say                       # (key, text) -> bool
         self.q: dict[str, list] = {}
         self.cv = threading.Condition()
         self.seen: dict[str, float] = {}
@@ -56,6 +58,9 @@ class Bridge:
                     return self._send(400, {"error": "bad json"})
                 if len(p) == 3 and p[0] == "bridge" and p[2] == "result":
                     ok = br.on_result(p[1], j.get("call_id"), str(j.get("output", "")), bool(j.get("speak", True)))
+                    return self._send(200 if ok else 404, {"ok": ok})
+                if len(p) == 3 and p[0] == "bridge" and p[2] == "say" and br.on_say is not None:
+                    ok = br.on_say(p[1], str(j.get("text", "")))
                     return self._send(200 if ok else 404, {"ok": ok})
                 self._send(404, {"error": "not found"})
 

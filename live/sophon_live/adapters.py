@@ -7,7 +7,7 @@
   {"t": "tool_call", "call_id", "name", "arguments"}                   the model called a tool (e.g. delegate)
   {"t": "error", "message": str}
 
-and offers: send_audio(f32 16 kHz), set_instructions(text), tool_result(call_id, output, speak), close()."""
+and offers: send_audio(f32 16 kHz), set_instructions(text) -> (ok, error), tool_result(call_id, output, speak), say(text), close()."""
 from __future__ import annotations
 
 import asyncio
@@ -35,6 +35,7 @@ class VllmOmniAdapter:
         self._tasks: list = []
         self._http: aiohttp.ClientSession | None = None
         self._closed = False
+        self._acks: dict = {}                 # session.update event_id -> future (ok, error)
 
     async def start(self, *, instructions: str, voice: str, lang: str, tools: list, history: list) -> None:
         self.ws = await websockets.connect(self.url, max_size=None, compression=None, open_timeout=15)
@@ -58,9 +59,29 @@ class VllmOmniAdapter:
         await self.ws.send(json.dumps({"type": "input_audio_buffer.append", "audio": base64.b64encode(f32.astype("<f4").tobytes()).decode(),
                                        "format": "pcm_f32le", "sample_rate_hz": 16000}))
 
-    async def set_instructions(self, text: str) -> None:
+    async def set_instructions(self, text: str) -> tuple[bool, dict | None]:
+        """Change instructions / tools mid-call. Sends only what may change (never the voice: the engine refuses any voice in
+        session.update once audio has started) and waits for the engine's answer: (True, None) or (False, error)."""
         self.cfg["instructions"] = text
-        await self.ws.send(json.dumps({"type": "session.update", "session": self.cfg}))
+        eid = "evt_" + uuid.uuid4().hex[:16]
+        fut = asyncio.get_running_loop().create_future(); self._acks[eid] = fut
+        try:
+            await self.ws.send(json.dumps({"type": "session.update", "event_id": eid,
+                                           "session": {"instructions": text, "extra_body": self.cfg["extra_body"]}}))
+            return await asyncio.wait_for(fut, 15)
+        except asyncio.TimeoutError:
+            return False, {"code": "engine_timeout", "message": "the engine did not confirm session.update within 15 s"}
+        finally:
+            self._acks.pop(eid, None)
+
+    async def say(self, text: str) -> bool:
+        """Speak this text verbatim in the session voice as the next reply (it is kept in the conversation history)."""
+        try:
+            async with self._http.post(f"{self.bridge_url}/bridge/{self.key}/say", json={"text": text}, timeout=aiohttp.ClientTimeout(total=10)) as r:
+                return r.status == 200
+        except Exception as e:  # noqa: BLE001
+            log.warning("say failed: %s", e)
+            return False
 
     async def tool_result(self, call_id: str | None, output: str, speak: bool = True) -> bool:
         try:
@@ -88,7 +109,14 @@ class VllmOmniAdapter:
                     await self.q.put({"t": "done", "rid": rid, "status": (e.get("response") or {}).get("status", "completed")})
                 elif t == "audio.cancelled":
                     await self.q.put({"t": "cancel"})
+                elif t == "session.updated":
+                    fut = next((f for f in self._acks.values() if not f.done()), None)
+                    if fut is not None: fut.set_result((True, None))
                 elif t == "error":
+                    err = e.get("error") or {}
+                    fut = self._acks.get(err.get("event_id") or e.get("event_id"))
+                    if fut is not None and not fut.done():
+                        fut.set_result((False, err)); continue
                     await self.q.put({"t": "error", "message": json.dumps(e.get("error"), ensure_ascii=False)[:300]})
         except websockets.ConnectionClosed:
             pass

@@ -46,6 +46,16 @@ Both frameworks add no noticeable latency: Pipecat measured the same as a direct
 
 Set `SOPHON_LIVE_REALTIME_KEYS_FILE` (one key per line) to require a bearer key on `/v1/realtime`.
 
+**Speaking a given sentence (`say`, an extension).** Fixed text that your application owns (a recording notice, a read-back before saving, a confirmation) can be spoken in the session voice with
+
+```json
+{"type": "response.create", "response": {"say": "This call is recorded for quality purposes.", "interruptible": true}}
+```
+
+It is spoken verbatim as the next reply once the caller is silent, streams as a normal response (audio and transcript), and joins the conversation history, so the model knows it was said. With `"interruptible": false` the caller's audio is held back until it has been spoken (no barge-in) and delivered right after. Needs the Flash / Tag / E2E plugin 1.6.0 or later; agent frameworks can use it to implement `say()`.
+
+**Changing instructions and tools mid-call.** `session.update` with new `instructions` and `tools` takes effect from the next reply, also after the model has spoken. The voice cannot change once audio has started; if the engine refuses an update, you get an `error` event instead of `session.updated`.
+
 ## Front + back office (optional)
 
 Set `SOPHON_LIVE_BACKEND=<model>` with an OpenAI-compatible endpoint (`SOPHON_LIVE_BACKEND_URL`, `SOPHON_LIVE_BACKEND_KEY`) and the gateway answers delegations itself with a larger model: Sophon stays on the line, the back office reasons and calls tools. With DeepSeek V4 Pro as the back office, Big Bench Audio rises from 81.2 to about 83.

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import copy
 import json
 import logging
 import os
@@ -196,6 +197,8 @@ class RealtimeSession:
         self.last_client_audio = 0.0
         self.bo = backend.BackOffice(self.id) if backend.MODEL else None   # front + back-office mode (backend.py)
         self.bk_wait: dict = {}                # call_id -> future for back-office tool calls
+        self.hold: dict | None = None           # non-interruptible say in progress
+        self.held: list = []                   # caller audio held back meanwhile
 
     async def send(self, ev: dict) -> None:
         ev.setdefault("event_id", _id("event"))
@@ -214,6 +217,7 @@ class RealtimeSession:
     # ------------------------------------------------------------ session
     async def on_update(self, ev: dict) -> None:
         s = ev.get("session") or {}
+        before = (copy.deepcopy(self.cfg), self.lang, self.in_fmt, self.out_fmt)
         for k in ("instructions", "tool_choice", "output_modalities"):
             if k in s and s[k] is not None:
                 self.cfg[k] = s[k]
@@ -250,8 +254,17 @@ class RealtimeSession:
             self.tasks = [asyncio.create_task(self._engine_events()), asyncio.create_task(self._idle_feed())]
             log.info("realtime %s started lang=%s tools=%d in=%s out=%s", self.id, self.lang, len(tools), self.in_fmt, self.out_fmt)
         else:
+            old_tools = self.engine.cfg["extra_body"].get("tools")
             self.engine.cfg["extra_body"]["tools"] = tools
-            await self.engine.set_instructions(self._sys())
+            ok, err = await self.engine.set_instructions(self._sys())
+            if not ok:                                         # the engine kept the previous session: say so instead of session.updated
+                self.engine.cfg["extra_body"]["tools"] = old_tools
+                self.cfg, self.lang, self.in_fmt, self.out_fmt = before
+                err = err or {}
+                log.warning("realtime %s: engine refused session.update: %s", self.id, err)
+                await self.error(f"session.update was not applied: {err.get('message') or 'refused by the engine'}",
+                                 err.get("code") or "session_update_failed", ev.get("event_id"))
+                return
         await self.send({"type": "session.updated", "session": self.cfg})
 
     def _sys(self) -> str:
@@ -277,6 +290,11 @@ class RealtimeSession:
             x, rate = decode_audio(ev.get("audio") or "", self.in_fmt)
             a = self.resample(x, rate, 16000)
             self.last_client_audio = time.monotonic()
+            if self.hold is not None:                          # a non-interruptible say is playing: keep the caller's audio for later
+                if self.hold["done"]:
+                    await self._release_hold()
+                else:
+                    self.held.append(a); await self.engine.send_audio(np.zeros_like(a)); return
             await self._vad(a)
             await self.engine.send_audio(a)
         elif t == "input_audio_buffer.commit":
@@ -300,6 +318,8 @@ class RealtimeSession:
                 item = dict(item, id=item.get("id") or _id("item"), object="realtime.item", status="completed")
                 await self.send({"type": "conversation.item.created", "previous_item_id": ev.get("previous_item_id"), "item": item})
                 log.info("realtime %s: text/other item ignored (speech input only): %s", self.id, str(item)[:120])
+        elif t == "response.create" and isinstance((ev.get("response") or {}).get("say"), str):
+            await self._say(ev)
         elif t == "response.create":
             meta = (ev.get("response") or {}).get("metadata")
             if self.resp is not None and not self.resp["done"] and self.resp["audio"]:
@@ -324,6 +344,33 @@ class RealtimeSession:
             pass
         else:
             await self.error(f"Unsupported event type: {t}", "unsupported_event", eid)
+
+    # ------------------------------------------------------------ say: speak given text verbatim (extension)
+    async def _say(self, ev: dict) -> None:
+        """response.create {"response": {"say": "...", "interruptible": true}}: the session voice speaks exactly this text, and it
+        becomes part of the conversation history. interruptible=false: until it has been spoken, the caller's audio is held back
+        (not heard by the model, so no barge-in) and delivered right after."""
+        rq = ev.get("response") or {}
+        text = rq["say"].strip()
+        if not text:
+            return await self.error("response.say is empty", "invalid_value", ev.get("event_id"), "response.say")
+        if self.resp is not None and not self.resp["done"] and self.resp["audio"]:
+            self.resp["closing"] = True
+        r = await self._begin(rq.get("metadata"))
+        r["forced"] = True; r["say"] = text; self._track(r)
+        if rq.get("interruptible") is False:
+            self.hold = r
+        if not await self.engine.say(text):
+            self.hold = None
+            await self._finish(r, "failed")
+            return await self.error("this engine does not support response.say (needs the Flash / Tag / E2E plugin 1.6.0+)", "unsupported", ev.get("event_id"))
+        r["empty_timer"] = asyncio.get_running_loop().call_later(20.0, lambda: asyncio.ensure_future(self._finish_if_empty(r)))
+        log.info("realtime %s: say %r interruptible=%s", self.id, text[:80], rq.get("interruptible", True))
+
+    async def _release_hold(self) -> None:
+        held, self.held, self.hold = self.held, [], None
+        for a in held:
+            await self._vad(a); await self.engine.send_audio(a)
 
     # ------------------------------------------------------------ input VAD + transcription
     async def _vad(self, a: np.ndarray) -> None:

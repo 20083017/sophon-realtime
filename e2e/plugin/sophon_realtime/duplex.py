@@ -27,6 +27,7 @@ from vllm.sampling_params import RequestOutputKind
 
 from vllm_omni.engine.duplex.config import DuplexCapabilities
 from vllm_omni.engine.duplex.contracts import DuplexAppendPlan, DuplexOutputAction, DuplexOutputDecision
+from vllm.sampling_params import StructuredOutputsParams
 from vllm_omni.engine.duplex.plugin import (DefaultDuplexModelSessionState, DuplexDataPlane, DuplexModelPlugin,
                                             DuplexRuntimeConfigError, PcmAppendBuffer, PcmAppendReservation)
 
@@ -291,6 +292,7 @@ class SophonBuffer(PcmAppendBuffer):
     tool_mocks: dict = field(default_factory=dict)            # session extra_body.tool_mocks (server-side mock executor)
     retry: dict | None = None                                # a reply append the framework did not accept: send it again as soon as appends are allowed
     tool_followup: bool = False                              # a tool result is in history: speak the answer as soon as the user is silent
+    say_q: list = field(default_factory=list)                # texts to speak verbatim (bridge /say), each as its own reply once the user is silent
     tool_mode: str = "mock"                                   # "mock": run tool_mocks here; "client": hand calls to the gateway over the bridge
     bridge_key: str | None = None
     call_entry: dict = field(default_factory=dict)           # client mode: call_id -> history entry the call belongs to
@@ -421,6 +423,12 @@ class SophonBuffer(PcmAppendBuffer):
                     r.rollback()
             if self.inflight_t and now - self.inflight_t > 3.0:
                 self.inflight_t = 0.0
+            if self.say_q and self.speech_ms == 0 and allow_emit and not self.reservations and not self.inflight_t:
+                text = self.say_q.pop(0); self.prev_user = None; self.t_reply = time.monotonic()
+                p = {"audio": base64.b64encode(np.zeros(SR // 10, np.float32).tobytes()).decode(), "format": "pcm_f32le", "sample_rate_hz": SR,
+                     "is_speech": True, "sophon_kind": "reply", "sophon_buf": id(self), "lang": self.lang, "say": text}
+                logger.info("sophon say: emitted (%d chars)", len(text))
+                return self._res(operation_id, p)
             if self.tool_followup and self.speech_ms == 0 and allow_emit and not self.reservations and not self.inflight_t:
                 self.tool_followup = False; self.prev_user = None; self.t_reply = time.monotonic()
                 p = {"audio": base64.b64encode(np.zeros(SR // 10, np.float32).tobytes()).decode(), "format": "pcm_f32le", "sample_rate_hz": SR,
@@ -682,7 +690,7 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
         self._spec_pending: dict[str, str] = {}              # speculative replies released/dropped before being planned: spec_id -> "release"/"drop"
         self._spec_lock = threading.Lock()
         self._keys: dict[str, SophonBuffer] = {}
-        self.bridge = _bridge.Bridge(self._bridge_result)
+        self.bridge = _bridge.Bridge(self._bridge_result, self._bridge_say)
         global _WARM_STARTED
         if not _WARM_STARTED and os.environ.get("SOPHON_WARMUP", "1") != "0":
             _WARM_STARTED = True; threading.Thread(target=_warm_turn_check, daemon=True).start()
@@ -700,7 +708,7 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
     def create_session_state(self):
         buf = SophonBuffer(); self._bufs[id(buf)] = buf
         buf.owner_release = self._release; buf.owner_drop = self._drop; buf.owner_active = self._active_reply
-        return DefaultDuplexModelSessionState(audio_buffer=buf)
+        return _SophonSessionState(audio_buffer=buf)
 
     def validate_client_extra_body(self, extra_body):
         return None
@@ -770,7 +778,8 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
 
     def _hist(self, h, msgs, audios):
         """One history entry: user speech, assistant reply (audio, or text + tool calls), then any tool results and follow-up replies."""
-        msgs.append({"role": "user", "content": "<|audio|>"}); audios.append((h["user"], SR))
+        if h.get("user") is not None:                             # said entries (bridge /say) have no user speech
+            msgs.append({"role": "user", "content": "<|audio|>"}); audios.append((h["user"], SR))
         self._asst(h, msgs, audios)
         for st in h.get("chain", ()):
             for r in st["results"]: msgs.append({"role": "tool", "content": r})
@@ -829,6 +838,20 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
             if isinstance(m, Mapping) and m.get("role") in ("user", "assistant") and isinstance(m.get("text"), str) and m["text"].strip():
                 msgs.append({"role": m["role"], "content": m["text"]})
         audios = []
+        if payload.get("say") is not None:
+            # say: the thinker is constrained to write exactly this text (one allowed choice), so the talker speaks it in the session voice
+            text = str(payload["say"])
+            for h in (buf.history if buf else []): self._hist(h, msgs, audios)
+            p0 = sampling_params[0] if isinstance(sampling_params, (tuple, list)) else sampling_params   # stage-0 params of this request
+            if p0 is not None:
+                p0.structured_outputs = StructuredOutputsParams(choice=[text])
+                p0.max_tokens = len(self.tok.encode(text, add_special_tokens=False)) + 16
+            info = {"kind": "reply", "buf": buf, "user": None, "a_audio": [], "a_text": "", "t_plan": time.monotonic(),
+                    "spec": False, "released": True, "dropped": False, "held": [], "say": text}
+            self._reqs[request_id] = info
+            if buf is not None: buf.prev_rid = request_id
+            logger.info("sophon say: request=%s hist=%d text=%r", request_id, len(buf.history) if buf else 0, text[:80])
+            return DuplexAppendPlan(prompt={"prompt": self._render(msgs), "multi_modal_data": {"audio": audios}, "additional_information": addl})
         if payload.get("tool_followup"):
             # a tool result came back: the model answers from history (user speech, its call, the result) -- no new user speech
             if buf is not None and buf.history and not (buf.history[-1].get("chain") and "a_text" not in buf.history[-1]["chain"][-1]):
@@ -850,7 +873,7 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
             logger.info("sophon tool: follow-up request=%s steps=%d", request_id, len(entry["chain"]))
             return DuplexAppendPlan(prompt={"prompt": self._render(msgs, tools), "multi_modal_data": {"audio": audios}, "additional_information": addl})
         said = payload.get("resume")
-        if said is not None and buf is not None and buf.history:
+        if said is not None and buf is not None and buf.history and buf.history[-1].get("user") is not None:
             # resume: the last reply was cut by a back-channel. Drop that entry and use the words already spoken as the start of the assistant turn, so the model simply continues
             entry = buf.history[-1]
             for h in buf.history[:-1]: self._hist(h, msgs, audios)
@@ -996,6 +1019,7 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
                 buf.last_said = info["a_text"]
             self._run_tools(buf, info["entry"], calls)
             return
+        if info.get("say") is not None and completed: info["a_text"] = info["say"]        # the text as given, not the detokenized stream
         entry = {"user": info["user"], "a_text": info["a_text"] + ("" if completed else "……（被用户打断）"),
                  "a_audio": a if completed and a is not None and a.size > SR // 10 else None}
         cut = buf.cut
@@ -1019,7 +1043,7 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
                 buf.last_play = {"t0": info.get("t_out") or time.monotonic(), "dur": a.size / SR, "entry": entry, "text": info["a_text"]}
             if calls: entry["tool_calls"] = calls; entry["a_text"] = entry["a_text"].strip()
             buf.history.append(entry); buf.last_said = info["a_text"]
-            while len(buf.history) > HIST_TURNS or (len(buf.history) > 1 and sum(h["user"].size for h in buf.history) / SR > HIST_SEC):
+            while len(buf.history) > HIST_TURNS or (len(buf.history) > 1 and sum(h["user"].size for h in buf.history if h.get("user") is not None) / SR > HIST_SEC):
                 buf.history.pop(0)
         self._run_tools(buf, entry, calls)
 
@@ -1052,6 +1076,15 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
             logger.info("sophon tool: client call %s %s %s", c["id"], c["name"], json.dumps(c["arguments"], ensure_ascii=False)[:200])
             self.bridge.push(buf.bridge_key, {"type": "tool_call", "call_id": c["id"], "name": c["name"], "arguments": c["arguments"], "t": time.time()})
 
+    def _bridge_say(self, key, text):
+        """A say from the gateway: speak this text verbatim as the next reply (after the user is silent) and keep it in history."""
+        buf = self._keys.get(key)
+        if buf is None or not text.strip():
+            return False
+        with buf.lock: buf.say_q.append(text.strip())
+        logger.info("sophon say: queued %r", text[:120])
+        return True
+
     def _bridge_result(self, key, call_id, output, speak):
         """A result from the gateway: attach it to the call's history entry (or the latest one) and, if it should be spoken, queue a follow-up reply."""
         buf = self._keys.get(key)
@@ -1083,3 +1116,37 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
 
 
 _fence_floor_patch()
+
+
+class _SophonSessionState(DefaultDuplexModelSessionState):
+    """Every reply's prompt is rebuilt from the session's current instructions, tools and history (plan_append), so instructions
+    may change mid-call: the framework's context lock is never set."""
+    @property
+    def context_locked(self): return False
+
+    @context_locked.setter
+    def context_locked(self, value): pass
+
+
+def _same_voice_patch() -> None:
+    """session.update after the first audio is refused whenever it carries a voice, even the current one (clients often resend
+    their whole session). Drop a voice equal to the session's before the framework checks it; a real voice change is still refused."""
+    from vllm_omni.engine.duplex import config as _c
+    for cls in list(vars(_c).values()):
+        if not (isinstance(cls, type) and "apply_realtime_update" in vars(cls)) or getattr(cls.apply_realtime_update, "_sophon", False):
+            continue
+        orig = cls.apply_realtime_update
+
+        def apply_realtime_update(self, patch, *a, _orig=orig, **kw):
+            p, cur = dict(patch), getattr(self, "voice", None)
+            if cur is not None:
+                if p.get("voice") == cur: p.pop("voice")
+                au = p.get("audio")
+                if isinstance(au, dict) and isinstance(au.get("output"), dict) and au["output"].get("voice") == cur:
+                    out = dict(au["output"]); out.pop("voice"); p["audio"] = dict(au, output=out)
+            return _orig(self, p, *a, **kw)
+        apply_realtime_update._sophon = True
+        cls.apply_realtime_update = apply_realtime_update
+
+
+_same_voice_patch()
