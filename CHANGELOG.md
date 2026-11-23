@@ -4,6 +4,14 @@ One version number for the whole Sophon-Realtime v1 family: the code in this rep
 ModelScope (git tags with the same name) and the `sophon-realtime` package on PyPI. Each entry says which builds changed.
 Second digit: new features or new weights; third digit: fixes only.
 
+## 1.6.2 (2026-11-23): say always finishes, and works before the caller speaks
+
+- **A `say` could stop before the end of the sentence** ([#22](https://github.com/adventists-ai/sophon-realtime/issues/22)). Its token limit was the sentence's normal tokenization plus 16. Constrained decoding may spell the same words with more, shorter tokens, so a long read-back on the 4B stopped at its limit mid-sentence. The limit is now the sentence's length in UTF-8 bytes plus 8. Every token spells at least one byte, so the sentence always fits.
+- When a `say` stops early (cut by the caller, or any other reason), the history and the log keep the words actually spoken, not the requested sentence. The log also says why it stopped.
+- **A `say` sent before the caller had spoken did nothing.** An example is a recording notice right at the start of a call. The engine only learned a session's tool-bridge key with its first reply or turn question, and the bridge opened only then. The bridge now opens when the engine starts. A `say` for a session that has not registered yet is queued, and unregistered sessions are asked to register (one throwaway turn question).
+- Verified on Flash 4B (the reporter's setup) through the Live gateway: 8 long read-backs (names, numbers, addresses, a Chinese one) × 3 rounds, all spoken to the end. The first `say` of each session was sent before any speech.
+- The plugins carry 1.6.2; the Live gateway did not change.
+
 ## 1.6.1 (2026-11-22): say waits for the current reply
 
 - **`say` no longer cuts a reply that is still being spoken.** It now waits until the current reply has been generated and played (and the caller is silent). On E2E, whose replies take longer to generate, a `say` sent right after a tool answer used to cut that answer.

@@ -287,6 +287,7 @@ class SophonBuffer(PcmAppendBuffer):
     retry: dict | None = None                                # a reply append the framework did not accept: send it again as soon as appends are allowed
     tool_followup: bool = False                              # a tool result is in history: speak the answer as soon as the user is silent
     say_q: list = field(default_factory=list)                # texts to speak verbatim (bridge /say), each as its own reply once the user is silent
+    need_bind: bool = False                                  # a say arrived for a key no session has registered yet: announce ours
     tool_mode: str = "mock"                                   # "mock": run tool_mocks here; "client": hand calls to the gateway over the bridge
     bridge_key: str | None = None
     call_entry: dict = field(default_factory=dict)           # client mode: call_id -> history entry the call belongs to
@@ -424,6 +425,11 @@ class SophonBuffer(PcmAppendBuffer):
                     r.rollback()
             if self.inflight_t and now - self.inflight_t > 3.0:
                 self.inflight_t = 0.0
+            if self.need_bind and self.bridge_key is None and self.speech_ms == 0 and allow_emit and not self.reservations and not self.inflight_t:
+                self.need_bind = False
+                p = {"audio": base64.b64encode(np.zeros(SR // 10, np.float32).tobytes()).decode(), "format": "pcm_f32le", "sample_rate_hz": SR,
+                     "is_speech": True, "sophon_kind": "bind", "sophon_buf": id(self), "lang": self.lang}
+                return self._res(operation_id, p)
             if self.say_q and self.speech_ms == 0 and allow_emit and not self.reservations and not self.inflight_t and self._quiet_out():
                 text = self.say_q.pop(0); self.prev_user = None; self.t_reply = time.monotonic()
                 p = {"audio": base64.b64encode(np.zeros(SR // 10, np.float32).tobytes()).decode(), "format": "pcm_f32le", "sample_rate_hz": SR,
@@ -686,6 +692,11 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
         self._spec_lock = threading.Lock()
         self._keys: dict[str, SophonBuffer] = {}
         self.bridge = _bridge.Bridge(self._bridge_result, self._bridge_say)
+        self._orphan_say: dict = {}                  # bridge key -> [first time, [texts]] for says that arrived before the session bound
+        try:
+            self.bridge.start()                      # listen from the start: a say may come before any reply
+        except OSError as e:
+            logger.warning("sophon bridge: could not open at start (%s); will retry with the first session", e)
         global _WARM_STARTED
         if not _WARM_STARTED and os.environ.get("SOPHON_WARMUP", "1") != "0":
             _WARM_STARTED = True; threading.Thread(target=_warm_turn_check, daemon=True).start()
@@ -794,6 +805,8 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
             key = runtime_config.get("bridge_key")
             if key and buf.bridge_key != key:
                 buf.bridge_key = key; self._keys[key] = buf; self.bridge.start()
+                orphan = self._orphan_say.pop(key, None)
+                if orphan: buf.say_q.extend(orphan[1]); logger.info("sophon say: session bound, %d queued say(s)", len(orphan[1]))
             with buf.lock:
                 if runtime_config.get("turn_fallback_s") is not None: buf.fb_s = float(runtime_config["turn_fallback_s"])
                 if runtime_config.get("min_release_s") is not None: buf.minrel_s = float(runtime_config["min_release_s"])
@@ -820,6 +833,10 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
                 sf.write(os.path.join(dbg, f"{request_id.rsplit('.', 1)[-1]}_{kind}.wav"), audio, SR)
             except Exception:
                 logger.exception("sophon debug dump failed")
+        if kind == "bind":                  # only registers the bridge key (above); answered by a throwaway turn question
+            text, perm = turn_question(lang, "")
+            self._reqs[request_id] = {"kind": "check", "buf": None, "perm": perm, "thr": 1.0, "top": {}}
+            return DuplexAppendPlan(prompt={"prompt": self._render([{"role": "user", "content": text}]), "multi_modal_data": {"audio": [(audio, SR)]}, "additional_information": addl})
         if kind == "check":
             text, perm = turn_question(lang, buf.last_said if buf else "")
             prompt = self._render([{"role": "user", "content": text}])
@@ -840,7 +857,9 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
             p0 = sampling_params[0] if isinstance(sampling_params, (tuple, list)) else sampling_params   # stage-0 params of this request
             if p0 is not None:
                 p0.structured_outputs = StructuredOutputsParams(choice=[text])
-                p0.max_tokens = len(self.tok.encode(text, add_special_tokens=False)) + 16
+                # constrained decoding may spell the sentence with more (shorter) tokens than its normal tokenization; every token
+                # spells at least one byte, so bytes + a few always fits
+                p0.max_tokens = len(text.encode("utf-8")) + 8
             info = {"kind": "reply", "buf": buf, "user": None, "a_audio": [], "a_text": "", "t_plan": time.monotonic(),
                     "spec": False, "released": True, "dropped": False, "held": [], "say": text}
             self._reqs[request_id] = info
@@ -1011,7 +1030,13 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
                 buf.last_said = info["a_text"]
             self._run_tools(buf, info["entry"], calls)
             return
-        if info.get("say") is not None and completed: info["a_text"] = info["say"]        # the text as given, not the detokenized stream
+        if info.get("say") is not None:
+            full, spoken = info["say"], info["a_text"]
+            if completed and "".join(spoken.split()) == "".join(full.split()):
+                info["a_text"] = full                                # the text as given, not the detokenized stream
+            else:                                                    # keep what was actually spoken
+                logger.warning("sophon say: %s after %d of %d chars: %r", "stopped early" if completed else "cut by the user",
+                               len(spoken), len(full), spoken[-80:])
         entry = {"user": info["user"], "a_text": info["a_text"] + ("" if completed else "……（被用户打断）"),
                  "a_audio": a if completed and a is not None and a.size > SR // 10 else None}
         cut = buf.cut
@@ -1071,8 +1096,16 @@ class SophonRealtimeDuplexPlugin(DuplexModelPlugin):
     def _bridge_say(self, key, text):
         """A say from the gateway: speak this text verbatim as the next reply (after the user is silent) and keep it in history."""
         buf = self._keys.get(key)
-        if buf is None or not text.strip():
+        if not text.strip():
             return False
+        if buf is None:                                          # no reply yet in that session: have unbound sessions announce their key
+            now = time.monotonic()
+            for k in [k for k, v in self._orphan_say.items() if now - v[0] > 30]: self._orphan_say.pop(k, None)
+            self._orphan_say.setdefault(key, [now, []])[1].append(text.strip())
+            for b in list(self._bufs.values()):
+                if b.bridge_key is None: b.need_bind = True
+            logger.info("sophon say: key not bound yet, queued and asked sessions to bind")
+            return True
         with buf.lock: buf.say_q.append(text.strip())
         logger.info("sophon say: queued %r", text[:120])
         return True
