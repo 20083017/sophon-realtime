@@ -18,6 +18,7 @@
   <a href="https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Tag"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Tag-Hugging%20Face-yellow" alt="Tag Hugging Face"></a>
   <a href="https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Flash-Hugging%20Face-yellow" alt="Flash Hugging Face"></a>
   <a href="https://www.modelscope.cn/studios/AdventistsAI/Sophon-Realtime"><img src="https://img.shields.io/badge/%E5%9C%A8%E7%BA%BF%E4%BD%93%E9%AA%8C-%E9%AD%94%E6%90%AD%E5%88%9B%E7%A9%BA%E9%97%B4-22D3A6" alt="在线体验"></a>
+  <a href="https://huggingface.co/spaces/adventists-ai/Sophon-Realtime"><img src="https://img.shields.io/badge/%E5%9C%A8%E7%BA%BF%E4%BD%93%E9%AA%8C-Hugging%20Face-22D3A6" alt="在线体验 Hugging Face"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0"></a>
 </p>
 
@@ -40,26 +41,31 @@ https://github.com/user-attachments/assets/4d6c74f5-3bbf-4dc2-8b11-f90ff85de4a2
 - **副语言理解 48.6，综合第一：听得懂语气。** 在 LISTEN、StressTest、MSPB 公开基准上高于 Gemini 3.8 Flash（46.9）和 Qwen3-Omni（44.6）。它直接从声音里听出情绪、重音、反讽、笑声和叹气。它的耳朵是我们开源的语音决策模型 [DuplexJev](https://github.com/adventists-ai/duplexjev/blob/main/README_CN.md)。
 - **NVV-SuperBench：Tag 版中文 0.86、英文 0.80，说得出语气。** 什么时候笑、叹气、换气、清嗓子，由模型根据对话自己决定；声音把这些标记演出来，不会把标签念出来。
 - **会说你的语言：中文、英文和五种欧洲语言，更多语言陆续加入。** 意大利语、德语、西班牙语、法语、葡萄牙语开箱即用，日语和俄语可用 Flash 版，韩语是下一个。详见[多语言](#多语言)。
+- **Full-Duplex-Bench v1.0 话轮：32B 94.0、4B-Tag 94.3，开源模型第一。** 你停顿时它等着，该它说时及时接上，你插话它马上停（PersonaPlex 68.7、Haru-4B 52.8、Moshi 49.4；闭源 GPT-Realtime 96.0）。4B 各版本都保留了这项能力。
 - **快：E2E 版首包约 0.25 秒，Flash 版 0.31 秒。** 你说话的全程它都在听，回复边听边起草；你插话，它马上停下，回答你的新问题。
 - **Full-Duplex-Bench v3 工具调用 Pass@1 48%，高于 Grok（43%）；接话成功率 100%：能干活。** 支持 [Live 模式](live/README_CN.md)，可以和后端大模型联合工作；兼容 OpenAI GPT-Live 的接口格式。每句回答都有文字记录，可以审计。
 - **三个版本都只要一张 80 GB 显卡、一条命令。** Tag 和 Flash 基于 vLLM-Omni 部署；单卡建议并发 Tag、E2E 16 路，Flash 40 路。代码和权重都是 Apache-2.0，可以商用。
 
 <p align="center">
+  <img src="docs/assets/bench/fdb1_turn_zh.png" width="49%" alt="Full-Duplex-Bench v1.0 话轮，开源模型">
   <img src="docs/assets/bench/voicebench_zh.png" width="49%" alt="VoiceBench 总分，全双工模型">
-  <img src="docs/assets/bench/bba_zh.png" width="49%" alt="Big Bench Audio">
 </p>
 <p align="center">
+  <img src="docs/assets/bench/bba_zh.png" width="49%" alt="Big Bench Audio">
   <img src="docs/assets/bench/fdb3_zh.png" width="49%" alt="Full-Duplex-Bench v3 工具调用 Pass@1">
+</p>
+<p align="center">
   <img src="docs/assets/bench/paraling_zh.png" width="49%" alt="副语言理解，公开基准合计">
 </p>
 <p align="center">
   <img src="docs/assets/bench/nvv3_zh.png" width="98%" alt="NVV-SuperBench，三个版本的非语言声音">
 </p>
 
-<sub>除注明外均为自测。VoiceBench：官方评测脚本，gpt-4o-mini 裁判；AlpacaEval 用标准 199 题子集。Big Bench Audio：GPT-4.1 对语音回答的转写打分，其他模型数据来自 Artificial Analysis。Full-Duplex-Bench v3：多次运行取最好，其他系统数据来自 FDB v3 论文（2026 年 4 月）。副语言理解：所有模型同样的提示词和选项轮换。NVV-SuperBench：官方题目与指标，每类每种语言 50 条，Gemini 3 Flash 裁判；三个版本念同一批带标签的回复文字，同用 Chelsie 音色。延迟和并发：单张 H100 80 GB，用户在 10 秒内陆续接入。</sub>
+<sub>除注明外均为自测。Full-Duplex-Bench v1.0：两组停顿处理、顺畅接话、用户打断四项平均，官方脚本；Haru-4B 用其自带服务和默认角色卡自测，其他模型取 FDB 官方表。VoiceBench：官方评测脚本，gpt-4o-mini 裁判；AlpacaEval 用标准 199 题子集。Big Bench Audio：GPT-4.1 对语音回答的转写打分，其他模型数据来自 Artificial Analysis。Full-Duplex-Bench v3：多次运行取最好，其他系统数据来自 FDB v3 论文（2026 年 4 月）。副语言理解：所有模型同样的提示词和选项轮换。NVV-SuperBench：官方题目与指标，每类每种语言 50 条，Gemini 3 Flash 裁判；三个版本念同一批带标签的回复文字，同用 Chelsie 音色。延迟和并发：单张 H100 80 GB，用户在 10 秒内陆续接入。</sub>
 
 ## 最新进展
 
+- **2026-11-24 · Hugging Face 在线体验上线**：浏览器里直接和智子对话，不用显卡、不用注册；可以随时打断、逗她笑、打开摄像头。[Hugging Face Space](https://huggingface.co/spaces/adventists-ai/Sophon-Realtime)
 - **2026-11-19 · 酒馆（SillyTavern）插件**：在酒馆里和角色实时通话，可以随时打断，每个角色一个（可克隆的）声音，通话内容写回聊天；用自己的显卡（4B 一张 24 GB 卡）或 API。[sophon-sillytavern](https://github.com/adventists-ai/sophon-sillytavern) · [演示](https://x.com/BKJinAI/status/2123275865257807933)
 - **2026-11-18 · v1.5：4B 版上更小的机器**——[Tag-4B-W4](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Tag-W4) 一张 24 GB 显卡就能跑（4 位大脑，占用约 21 GB；语音和声音标签不变），[Mac 4B 版](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash-MLX) 16 GB 内存的 Apple 芯片 Mac 就能跑（MLX；你说完 0.3–0.5 秒开口）。[详情](#更小的机器15-新增)
 - **2026-11-16 · v1.4：Sophon-Realtime 4B 版**——Tag、Flash、E2E 换上 4B 大脑，一张消费级显卡就能跑（Flash 24 GB；Tag、E2E 32 GB）。全双工接话和声音标签保留（Full-Duplex-Bench v1.0：Tag 94.3、E2E 92.3、Flash 87.7）；知识比 32B 少很多（VoiceBench 62.4）。[详情](#4b-版14-新增) · [Tag](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Tag) · [Flash](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash) · [E2E](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-E2E)
@@ -67,10 +73,10 @@ https://github.com/user-attachments/assets/4d6c74f5-3bbf-4dc2-8b11-f90ff85de4a2
 - **2026-11-13 · Mac 版上线**：Flash-4bit 可以在 Apple 芯片的 Mac 上本地运行（MLX，推荐 36 GB 及以上内存），全双工，支持话轮判断、打断和回音消除；你说完约 1 秒开口。[mac/](mac/README_CN.md) · [权重](https://modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Flash-4bit-MLX)
 - **2026-11-13 · v1.2：长回复完整说完**，Tag、Flash、E2E 三个版本都不再限制语音时长；同时发布 **Flash-4bit**，一张 32 GB 显卡就能跑。[发布说明](https://github.com/adventists-ai/sophon-realtime/releases/tag/v1.2.0) · [Flash-4bit](flash/README_CN.md#flash-4bit一张-32-gb-显卡)
 - **2026-11-11 · v1.1：零样本声音克隆**，Tag 版和 Flash 版均已支持。几秒钟的录音，就能用这个声音和你实时对话。[看演示视频](#零样本声音克隆v11-新增)
-- **2026-11-11 · E2E 成为正式版本，单卡即可运行**，单路首包约 0.25 秒；也能像 Tag、Flash 一样用 vLLM-Omni 部署。[详情](#e2e)
 
 <details><summary>更早的进展</summary>
 
+- **2026-11-11 · E2E 成为正式版本，单卡即可运行**，单路首包约 0.25 秒；也能像 Tag、Flash 一样用 vLLM-Omni 部署。[详情](#e2e)
 - **2026-11-09 · 在线体验上线**：[魔搭创空间](https://www.modelscope.cn/studios/AdventistsAI/Sophon-Realtime)；**Live 模式**同步开源（兼容 OpenAI GPT-Live，查询类任务交给你自己的后端，边说边等结果）。[Live 模式](live/README_CN.md)
 - **2026-11-08 · v1.0：** Tag、Flash、E2E 三个版本首次开源发布。
 

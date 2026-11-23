@@ -17,7 +17,8 @@
   <a href="https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Flash-Hugging%20Face-yellow" alt="Flash on Hugging Face"></a>
   <a href="https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Tag"><img src="https://img.shields.io/badge/Tag-ModelScope-624aff" alt="Tag on ModelScope"></a>
   <a href="https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Flash"><img src="https://img.shields.io/badge/Flash-ModelScope-624aff" alt="Flash on ModelScope"></a>
-  <a href="https://www.modelscope.ai/studios/AdventistsAI/Sophon-Realtime"><img src="https://img.shields.io/badge/Try%20it-online-22D3A6" alt="Try it online"></a>
+  <a href="https://huggingface.co/spaces/adventists-ai/Sophon-Realtime"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Try%20it-Hugging%20Face%20Spaces-22D3A6" alt="Try it on Hugging Face Spaces"></a>
+  <a href="https://www.modelscope.ai/studios/AdventistsAI/Sophon-Realtime"><img src="https://img.shields.io/badge/Try%20it-ModelScope-22D3A6" alt="Try it on ModelScope"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0"></a>
 </p>
 
@@ -40,26 +41,31 @@ https://github.com/user-attachments/assets/1d9442ef-84b0-45a3-acd4-2d05a9562397
 - **Paralinguistic understanding 48.6, #1 overall: it hears your tone.** Ahead of Gemini 3.8 Flash (46.9) and Qwen3-Omni (44.6) on LISTEN, StressTest and MSPB. It hears emotion, emphasis, sarcasm, laughter and sighs straight from your voice. Its ears are [DuplexJev](https://github.com/adventists-ai/duplexjev), our open speech-decision model.
 - **NVV-SuperBench 0.86 (Chinese) and 0.80 (English) with the Tag build: it speaks with tone.** The model decides from the conversation when to laugh, sigh, breathe or clear its throat, and the voice performs it instead of reading the tag aloud.
 - **Speaks your language: Chinese, English and five European languages, with more on the way.** Italian, German, Spanish, French and Portuguese work out of the box, Japanese and Russian run on Flash, and Korean is next. See [Languages](#languages).
+- **Full-Duplex-Bench v1.0 turn-taking 94.0 (32B) and 94.3 (4B-Tag): #1 among open models.** It waits through your pauses, takes its turn on time and stops when you cut in (PersonaPlex 68.7, Haru-4B 52.8, Moshi 49.4; closed GPT-Realtime 96.0). Every 4B build keeps it.
 - **Fast: first audio in about 0.25 s with E2E and 0.31 s with Flash.** It listens the whole time you talk and drafts its reply as you go. When you cut in, it stops and answers your new question.
 - **Full-Duplex-Bench v3 tool calling: Pass@1 48%, ahead of Grok (43%), with a 100% response rate: it gets work done.** [Live mode](live/README.md) lets it work together with a larger backend model, and it is compatible with the OpenAI GPT-Live interface format. Every reply comes with an auditable transcript.
 - **One 80 GB GPU for every build, one command.** Tag and Flash are served by vLLM-Omni; up to 16 (Tag, E2E) or 40 (Flash) concurrent users per GPU. Apache-2.0 code and weights, free for commercial use.
 
 <p align="center">
+  <img src="docs/assets/bench/fdb1_turn_en.png" width="49%" alt="Full-Duplex-Bench v1.0 turn-taking, open models">
   <img src="docs/assets/bench/voicebench_en.png" width="49%" alt="VoiceBench overall, full-duplex models">
-  <img src="docs/assets/bench/bba_en.png" width="49%" alt="Big Bench Audio">
 </p>
 <p align="center">
+  <img src="docs/assets/bench/bba_en.png" width="49%" alt="Big Bench Audio">
   <img src="docs/assets/bench/fdb3_en.png" width="49%" alt="Full-Duplex-Bench v3 tool use, Pass@1">
+</p>
+<p align="center">
   <img src="docs/assets/bench/paraling_en.png" width="49%" alt="Paralinguistic understanding, public benchmarks combined">
 </p>
 <p align="center">
   <img src="docs/assets/bench/nvv3_en.png" width="98%" alt="NVV-SuperBench, non-verbal sounds in speech, three builds">
 </p>
 
-<sub>Self-run unless noted. VoiceBench: official evaluators with a gpt-4o-mini judge; AlpacaEval on the standard 199-question subset. Big Bench Audio: GPT-4.1 judges the transcript of the spoken answer; other models from Artificial Analysis. Full-Duplex-Bench v3: best of several runs; other systems from the FDB v3 paper (Apr 2026). Paralinguistic understanding: same prompts and option rotation for every model. NVV-SuperBench: official prompts and metric, 50 items per class per language, Gemini 3 Flash judge; the three builds speak the same tagged reply texts in the Chelsie voice. Latency and concurrency: one H100 80 GB, users arriving within 10 s.</sub>
+<sub>Self-run unless noted. Full-Duplex-Bench v1.0: mean of the two pause-handling sets, smooth turn-taking and user interruption, official scripts; Haru-4B self-run with its own server and default character card, other models from the FDB official table. VoiceBench: official evaluators with a gpt-4o-mini judge; AlpacaEval on the standard 199-question subset. Big Bench Audio: GPT-4.1 judges the transcript of the spoken answer; other models from Artificial Analysis. Full-Duplex-Bench v3: best of several runs; other systems from the FDB v3 paper (Apr 2026). Paralinguistic understanding: same prompts and option rotation for every model. NVV-SuperBench: official prompts and metric, 50 items per class per language, Gemini 3 Flash judge; the three builds speak the same tagged reply texts in the Chelsie voice. Latency and concurrency: one H100 80 GB, users arriving within 10 s.</sub>
 
 ## News
 
+- **2026-11-24 · Try it on Hugging Face:** talk to Sophon-Realtime in your browser, no GPU and no sign-up: interrupt it, laugh with it, turn on your camera. [Hugging Face Space](https://huggingface.co/spaces/adventists-ai/Sophon-Realtime)
 - **2026-11-19 · SillyTavern plugin:** call your character in real time from SillyTavern, with interruptions, a cloned voice per character and the call written back into the chat; your own GPU (4B on one 24 GB card) or the API. [sophon-sillytavern](https://github.com/adventists-ai/sophon-sillytavern) · [demo](https://x.com/BKJinAI/status/2123275865257807933)
 - **2026-11-18 · v1.5: 4B on smaller machines** — [Tag-4B-W4](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag-W4) runs on one 24 GB GPU (4-bit brain, about 21 GB; speech and sound tags unchanged), and [Mac 4B](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash-MLX) on Apple silicon Macs with 16 GB (MLX; it starts speaking 0.3–0.5 s after you stop). [Details](#smaller-machines-new-in-15)
 - **2026-11-16 · v1.4: Sophon-Realtime 4B** — Tag, Flash and E2E with a 4B brain, on one consumer GPU (Flash 24 GB; Tag and E2E 32 GB). Full-duplex turn-taking and sound tags carry over (Full-Duplex-Bench v1.0: Tag 94.3, E2E 92.3, Flash 87.7); much less knowledge than 32B (VoiceBench 62.4). [Details](#4b-builds-new-in-14) · [Tag](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag) · [Flash](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash) · [E2E](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-E2E)
@@ -67,10 +73,10 @@ https://github.com/user-attachments/assets/1d9442ef-84b0-45a3-acd4-2d05a9562397
 - **2026-11-13 · Sophon-Realtime on Mac:** Flash-4bit runs locally on Apple silicon (MLX, 36 GB+ recommended), full duplex with turn-taking, barge-in and echo cancellation; it starts speaking about 1 s after you stop. [mac/](mac/README.md) · [weights](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash-4bit-MLX)
 - **2026-11-13 · v1.2: long replies are spoken to the end** in Tag, Flash and E2E, however long they are; plus **Flash-4bit** for one 32 GB GPU. [Release notes](https://github.com/adventists-ai/sophon-realtime/releases/tag/v1.2.0) · [Flash-4bit](flash/README.md#flash-4bit-one-32-gb-gpu)
 - **2026-11-11 · v1.1: zero-shot voice cloning** in Tag and Flash: a few seconds of audio and it talks to you in that voice, in real time. [Watch the demo](#zero-shot-voice-cloning-new-in-v11)
-- **2026-11-11 · E2E becomes a full build on one GPU**, with first audio in about 0.25 s; it can also be served by vLLM-Omni like Tag and Flash. [Details](#e2e)
 
 <details><summary>Older news</summary>
 
+- **2026-11-11 · E2E becomes a full build on one GPU**, with first audio in about 0.25 s; it can also be served by vLLM-Omni like Tag and Flash. [Details](#e2e)
 - **2026-11-09 · Try it online** on [ModelScope Studio](https://www.modelscope.ai/studios/AdventistsAI/Sophon-Realtime), and **Live mode** (OpenAI GPT-Live compatible: hands lookups to your own backend while it keeps talking) is open source. [Live mode](live/README.md)
 - **2026-11-08 · v1.0:** first open-source release of the Tag, Flash and E2E builds.
 
