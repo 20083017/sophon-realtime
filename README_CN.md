@@ -109,7 +109,7 @@ https://github.com/user-attachments/assets/4d6c74f5-3bbf-4dc2-8b11-f90ff85de4a2
 | 安装 | `SIZE=4B bash install.sh` | `bash install.sh` + [权重](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash) | `SIZE=4B bash install.sh` |
 | 权重 | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Tag) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Tag) | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-Flash) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-Flash) | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-4B-E2E) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-4B-E2E) |
 
-4B 大脑保留了对话能力（接话、附和、被打断就停、声音标签比例和标准答案一样），但知识和推理弱很多：VoiceBench 62.4（32B：82.8），Big Bench Audio 44.3%（32B：81.8%）。适合本地演示、陪伴和角色对话、话轮研究；需要回答准确时用 32B 版或[在线 API](https://api.adventists.cn/console/)。`start.sh` 识别到 4B 模型会自动选它的配置。
+4B 大脑保留了对话能力（接话、附和、被打断就停、声音标签比例和标准答案一样），但知识和推理弱很多：VoiceBench 62.4（32B：82.8），Big Bench Audio 44.3%（32B：81.8%）。适合本地演示、陪伴和角色对话、话轮研究；需要回答准确时用 32B 版或[在线 API](https://api.adventists.cn/console/)。**4B 版目前不支持工具调用**（该调工具时它不会调用，见 [#20](https://github.com/adventists-ai/sophon-realtime/issues/20)）；要用工具或 Live 模式的委派，请用 32B 版。`start.sh` 识别到 4B 模型会自动选它的配置。
 
 #### 更小的机器（1.5 新增）
 
