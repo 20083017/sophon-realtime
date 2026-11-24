@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Tag"><img src="https://img.shields.io/badge/Tag-%E9%AD%94%E6%90%AD-624aff" alt="Tag 魔搭"></a>
   <a href="https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Flash"><img src="https://img.shields.io/badge/Flash-%E9%AD%94%E6%90%AD-624aff" alt="Flash 魔搭"></a>
-  <a href="https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Tag"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Tag-Hugging%20Face-yellow" alt="Tag Hugging Face"></a>
+  <a href="https://huggingface.co/adventists-ai/Sophon-Realtime-v1"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Tag-Hugging%20Face-yellow" alt="Tag Hugging Face"></a>
   <a href="https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Flash-Hugging%20Face-yellow" alt="Flash Hugging Face"></a>
   <a href="https://www.modelscope.cn/studios/AdventistsAI/Sophon-Realtime"><img src="https://img.shields.io/badge/%E5%9C%A8%E7%BA%BF%E4%BD%93%E9%AA%8C-%E9%AD%94%E6%90%AD%E5%88%9B%E7%A9%BA%E9%97%B4-22D3A6" alt="在线体验"></a>
   <a href="https://huggingface.co/spaces/adventists-ai/Sophon-Realtime"><img src="https://img.shields.io/badge/%E5%9C%A8%E7%BA%BF%E4%BD%93%E9%AA%8C-Hugging%20Face-22D3A6" alt="在线体验 Hugging Face"></a>
@@ -98,7 +98,7 @@ https://github.com/user-attachments/assets/4d6c74f5-3bbf-4dc2-8b11-f90ff85de4a2
 | 零样本音色克隆 | **支持**，3–10 秒参考音（[用法](tag/README_CN.md#零样本音色克隆)） | **支持**，3–10 秒参考音（[用法](flash/README_CN.md#零样本音色克隆)） | **支持**，5–12 秒参考音（[用法](e2e/README_CN.md#零样本音色克隆130-新增)） |
 | 显卡 | **1** × 80 GB | **1** × 80 GB | **1** × 80 GB |
 | 部署 | vLLM-Omni，一条命令 | vLLM-Omni，一条命令 | 自研引擎或 vLLM-Omni，一条命令 |
-| 权重 | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Tag) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Tag) | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Flash) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash) | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-E2E) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-E2E) |
+| 权重 | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Tag) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-v1) | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Flash) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash) | [魔搭](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-E2E) · [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-E2E) |
 | 代码 | [`tag/`](tag/README_CN.md) | [`flash/`](flash/README_CN.md) | 自研引擎：[`docs/deploy_CN.md`](docs/deploy_CN.md) · vLLM-Omni：[`e2e/`](e2e/README_CN.md) |
 
 **怎么选？** 想让声音"会演"，先用 **Tag**；最看重单卡能接多少人，用 **Flash**；想要最快的首包、同时保留会笑会叹气的表现力，用 **E2E**。Tag 和 Flash 接口相同，之后可以随时切换；E2E 用自研引擎，1.1.4 起也可以用 vLLM-Omni 部署（接口与 Tag、Flash 相同）。

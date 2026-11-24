@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Tag"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Tag-Hugging%20Face-yellow" alt="Tag on Hugging Face"></a>
+  <a href="https://huggingface.co/adventists-ai/Sophon-Realtime-v1"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Tag-Hugging%20Face-yellow" alt="Tag on Hugging Face"></a>
   <a href="https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Flash-Hugging%20Face-yellow" alt="Flash on Hugging Face"></a>
   <a href="https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Tag"><img src="https://img.shields.io/badge/Tag-ModelScope-624aff" alt="Tag on ModelScope"></a>
   <a href="https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Flash"><img src="https://img.shields.io/badge/Flash-ModelScope-624aff" alt="Flash on ModelScope"></a>
@@ -98,7 +98,7 @@ All three builds share the same brain: one 32B model that listens to your voice,
 | Zero-shot voice cloning | **yes**, from a 3–10 s clip ([how](tag/README.md#zero-shot-voice-cloning)) | **yes**, from a 3–10 s clip ([how](flash/README.md#zero-shot-voice-cloning)) | **yes**, from a 5–12 s clip ([how](e2e/README.md#zero-shot-voice-cloning-new-in-130)) |
 | GPUs | **1** × 80 GB | **1** × 80 GB | **1** × 80 GB |
 | Serving | vLLM-Omni, one command | vLLM-Omni, one command | own engine or vLLM-Omni, one command |
-| Weights | [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Tag) · [ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Tag) | [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash) · [ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Flash) | [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-E2E) · [ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-E2E) |
+| Weights | [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-v1) · [ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Tag) | [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-Flash) · [ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-Flash) | [HF](https://huggingface.co/adventists-ai/Sophon-Realtime-32B-E2E) · [ModelScope](https://www.modelscope.cn/models/AdventistsAI/Sophon-Realtime-32B-E2E) |
 | Code | [`tag/`](tag/README.md) | [`flash/`](flash/README.md) | own engine: [`docs/deploy.md`](docs/deploy.md) · vLLM-Omni: [`e2e/`](e2e/README.md) |
 
 **Which one?** Start with **Tag** if you want the voice to act. Pick **Flash** if the number of users per GPU matters most. Pick **E2E** for the fastest first audio with a voice that still laughs and sighs. Tag and Flash share the same APIs, so you can switch later; E2E runs on its own engine or, since 1.1.4, on vLLM-Omni with the same APIs as Tag and Flash.
