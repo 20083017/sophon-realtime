@@ -1,0 +1,30 @@
+
+ curl --silent --show-error --include \
+>   --connect-timeout 5 --max-time 30 \
+>   'http://10.1.120.60:9193/v1/chat/completions' \
+>   -H 'Content-Type: application/json' \
+>   --data-raw '{
+>     "model": "Qwen3.6-27B-FP8",
+>     "messages": [
+>       {
+>         "role": "system",
+>         "content": "这是连接测试。仅输出一个JSON对象，包含字符串字段response和空数组字段actions，不要输出其他内容。"
+>       },
+>       {
+>         "role": "user",
+>         "content": "请在response中回答：连接成功。"
+>       }
+>     ],
+>     "temperature": 0,
+>     "max_tokens": 128,
+>     "stream": false
+>   }'
+HTTP/1.1 200 OK
+date: Tue, 24 Nov 2026 10:51:07 GMT
+server: uvicorn
+content-length: 1032
+content-type: application/json
+
+{"id":"chatcmpl-9686e68f8787b1de","object":"chat.completion","created":1795517467,"model":"Qwen3.6-27B-FP8","choices":[{"index":0,"message":{"role":"assistant","content":"Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Goal: Connection test.\n    *   Output format: JSON object only.\n    *   Fields: `response` (string), `actions` (empty array).\n    *   Content of `response`: \"连接成功。\" (Connection successful).\n    *   Constraint: Do not output anything else.\n\n2.  **Construct the JSON:**\n    *   `response`: \"连接成功。\"\n    *   `actions`: []\n\n3.  **Drafting the JSON:**\n    ```json\n    {","refusal":null,"annotations":null,"audio":null,"function_call":null,"tool_calls":[],"reasoning":null},"logprobs":null,"finish_reason":"length","stop_reason":null,"token_ids":null}],"service_tier":null,"system_fingerprint":null,"usage":{"prompt_tokens":48,"total_tokens":176,"completion_tokens":128,"prompt_tokens_details":null},"prompt_logprobs":null,"prompt_token_ids":null,"kv_transfer_params":null}
+
+

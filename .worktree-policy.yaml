@@ -1,0 +1,396 @@
+version: 1
+policy_name: sophon-local-worktree-governance
+
+source_of_truth: .worktree-policy.yaml
+agent:
+  name: worktree-manager
+  default_mode: read_only
+  mutation_lifecycle:
+    - discovery
+    - validate_policy
+    - plan
+    - safety_check
+    - execute
+    - verify
+    - record_report
+  refuse_mutation_when_policy_missing_or_invalid: true
+
+repository:
+  protected_branches:
+    - main
+  required_base_branches:
+    - main
+  missing_base_behavior: block_mutation
+  worktree_roots:
+    - .claude/worktrees
+  default_worktree_path: .claude/worktrees/main
+
+branch_naming:
+  pattern: '^(feature|fix|perf|diagnostic|refactor|docs|experiment|release|hotfix)/[a-z0-9][a-z0-9._-]*$'
+  rejected_terms:
+    - temp
+    - tmp
+    - wip
+    - test
+    - misc
+    - stuff
+    - backup
+    - old
+    - delete
+  require_type_prefix: true
+  require_lowercase_slug: true
+
+branch_types:
+  feature:
+    base: main
+    targets:
+      - main
+    strategy: squash
+    delivery: pull_request_only
+    promotion_required: false
+  fix:
+    base: main
+    targets:
+      - main
+    strategy: squash
+    delivery: pull_request_only
+    promotion_required: false
+  perf:
+    base: main
+    targets:
+      - main
+    strategy: squash
+    delivery: pull_request_only
+    promotion_required: false
+  diagnostic:
+    base: main
+    targets:
+      - main
+    strategy: squash
+    delivery: pull_request_only
+    promotion_required: false
+  refactor:
+    base: main
+    targets:
+      - main
+    strategy: squash
+    delivery: pull_request_only
+    promotion_required: false
+  docs:
+    base: main
+    targets:
+      - main
+    strategy: squash
+    delivery: pull_request_only
+    promotion_required: false
+  experiment:
+    base: main
+    targets: []
+    strategy: none
+    delivery: no_direct_merge
+    promotion_required: true
+  release:
+    base: main
+    targets:
+      - main
+    strategy: merge_commit
+    delivery: pull_request_only
+    promotion_required: false
+  hotfix:
+    base: main
+    targets:
+      - main
+    strategy: merge_commit
+    delivery: pull_request_only
+    promotion_required: false
+
+protection_rules:
+  forbid_direct_commit_to_protected_branches: true
+  forbid_direct_mutation_of_protected_branches: true
+  forbid_force_push: false
+  forbid_automatic_clean: true
+  forbid_automatic_stash: true
+  forbid_shared_branch_rebase: true
+  forbid_detached_head_mutation: true
+  forbid_experiment_direct_merge: true
+  forbid_undeclared_sideways_merge: true
+  require_explicit_approval_for:
+    - reset_hard
+    - clean
+    - force_push
+    - unmerged_branch_delete
+  protected_branches_require_pull_request: true
+
+readiness_requirements:
+  require_clean_worktree: true
+  require_policy_valid: true
+  require_branch_matches_naming: true
+  require_declared_branch_type: true
+  require_base_branch_exists: true
+  require_target_branch_exists: true
+  require_no_unpushed_commits_before_delete: true
+  require_validation_evidence: true
+  require_merge_target_from_policy: true
+  require_no_dirty_protected_branch: true
+  require_no_detached_head: true
+
+cleanup_requirements:
+  scope: local_worktree_lifecycle_batch
+  operations:
+    - remove_integrated_worktree
+  repository_rule_isolation:
+    use_cleanup_base_resolution_for_lifecycle_readiness: true
+    preserve_global_required_base_rules_outside_lifecycle_batch: true
+    preserve_protected_branch_rules: true
+    preserve_create_merge_delivery_rules_outside_scoped_exceptions: true
+    scoped_exceptions:
+      - managed_agent_integration
+  authorization:
+    accepted_sources:
+      - current_user_explicit_request
+      - approved_plan_phase
+    reject_delegate_message_as_authorization: true
+    freeze_request_selector: true
+    freeze_integration_target: true
+    freeze_destructive_effects: true
+    additional_routine_confirmation_required: false
+  base_resolution:
+    candidates:
+      - main
+    require_at_least_one_existing_candidate: true
+    missing_candidate_does_not_block_when_another_exists: true
+    head_integration_pass_when_any:
+      - head_reachable_from_any_existing_candidate
+      - ahead_count_zero_against_any_existing_candidate
+  inventory:
+    execution_context: main_or_common_git_directory_owner
+    collect_once_per_batch: true
+    worktrees: 'git worktree list --porcelain'
+    tracked_staged_and_all_untracked: 'git status --porcelain=v2 --branch --untracked-files=all'
+    ignored_leaf_paths: 'git ls-files -z --others --ignored --exclude-standard'
+    ignored_leaf_format: nul_delimited_exact_paths
+    prohibit_collapsed_ignored_directory_entries: true
+    activity:
+      authoritative_source: primary_orchestrator_live_worktree_assignments
+      snapshot_context: context_owning_common_git_directory
+      key: canonical_absolute_worktree_path
+      probe: exact_path_has_live_or_running_owner
+      active_when: authoritative_snapshot_reports_live_or_running_owner
+      inactive_when:
+        - authoritative_snapshot_explicitly_reports_no_live_or_running_owner
+        - canonical_path_absent_from_explicitly_complete_snapshot
+      unresolved_when:
+        - source_unavailable
+        - snapshot_not_explicitly_complete
+        - ownership_state_unknown
+      unresolved_result: HOLD
+      refresh:
+        - batch_inventory
+        - immediate_precheck
+    classify_every_payload: true
+    no_unique_commit_is_not_payload_discard_proof: true
+  hold_worktree_states:
+    - active
+    - locked
+    - current
+  payload_classifications:
+    allowed_values:
+      - same
+      - superseded
+      - temp
+      - unique
+      - unknown
+    same:
+      requires: exact_path_type_and_content_identity_with_selected_existing_base
+    superseded:
+      requires: owner_path_line_proof_selected_existing_base_retains_or_enhances_acceptance_critical_capability
+    temp:
+      requires:
+        - explicit_diagnostic_artifact
+        - direct_user_cleanup_request_covers_exact_artifact
+    unique:
+      removal: block
+    unknown:
+      removal: block
+  allowed_payload_cleanup:
+    requires_direct_user_cleanup_request: true
+    classes:
+      - same
+      - superseded
+      - temp
+    exact_manifest_paths_only: true
+    require_every_descendant_leaf_frozen_and_classified: true
+    directory_level_payload_removal: forbidden
+    tracked_or_staged_action: restore_exact_path_from_head
+    untracked_or_ignored_action: remove_exact_manifest_path
+    require_status_clean_after_cleanup: true
+  managed_agent_integration:
+    # Main is protected; integration follows the ordinary pull-request route.
+    enabled: false
+    branch_pattern: '^worktree-agent-[a-z0-9][a-z0-9._-]*$'
+    path_component_pattern: '^agent-[a-z0-9][a-z0-9._-]*$'
+    require_matching_agent_suffix: true
+    require_path_under_repository_worktree_roots: true
+    naming_exception_scope: managed_agent_integration_only
+    target_resolution:
+      default_target: main
+      allowed_targets:
+        - main
+      require_existing_target: true
+      require_existing_unique_target_worktree: true
+      require_target_owned_by_current_primary_executor: true
+      require_target_direct_mutation_allowed: true
+    source_requirements:
+      require_branch_attached: true
+      require_head_unchanged_since_manifest: true
+      require_source_ref_equals_frozen_head_immediately_before_merge: true
+      require_inactive: true
+      require_unlocked: true
+      require_not_current: true
+      require_not_detached: true
+      require_common_ancestor_with_target: true
+      require_status_clean_after_exact_cleanup: true
+      committed_delta_is_never_temp_payload: true
+    target_requirements:
+      require_exact_target_branch: true
+      require_no_detached_head: true
+      require_clean_tracked_and_staged_state: true
+      allow_untracked_and_ignored_only_when_no_source_path_collision: true
+      freeze_untracked_and_ignored_path_type_and_content_identity: true
+      require_no_unresolved_merge_state: true
+      require_head_matches_expected_batch_cursor: true
+    strategy:
+      mode: fast_forward_else_merge_commit
+      merge_operand: frozen_source_commit_oid
+      exact_source_ref_required: true
+      forbid_rebase: true
+      forbid_squash: true
+      forbid_cherry_pick: true
+      require_read_only_conflict_prediction: true
+      predicted_conflict_result: HOLD
+      unexpected_conflict_action: git_merge_abort
+      require_abort_restores_target: true
+    verification:
+      require_merge_operand_equals_frozen_source_oid: true
+      require_source_head_reachable_from_target: true
+      require_target_no_unresolved_merge_state: true
+      require_target_tracked_and_staged_clean_after_merge: true
+      require_target_untracked_and_ignored_path_type_content_identity_preserved: true
+      require_source_ref_preserved: true
+      topology:
+        fast_forward:
+          require_expected_target_cursor_ancestor_of_result: true
+          require_result_equals_frozen_source_oid: true
+        normal_merge_commit:
+          require_exactly_two_parents: true
+          require_first_parent_equals_expected_target_cursor: true
+          require_second_parent_equals_frozen_source_oid: true
+        advance_batch_cursor_only_after_topology_proof: true
+  block_remove_when:
+    - no_existing_cleanup_base
+    - head_not_integrated_with_any_existing_cleanup_base
+    - active_worktree
+    - locked_worktree
+    - current_worktree
+    - unique_payload
+    - unknown_payload
+    - status_not_clean_after_exact_cleanup
+  block_integrate_when:
+    - source_not_managed_agent_branch
+    - source_path_outside_managed_worktree_roots
+    - source_branch_path_suffix_mismatch
+    - source_active
+    - source_locked
+    - source_current
+    - source_detached
+    - source_head_changed
+    - source_ref_changed_before_merge
+    - source_unique_payload
+    - source_unknown_payload
+    - source_unapproved_uncommitted_payload
+    - target_missing
+    - target_checkout_ambiguous
+    - target_owned_by_other_live_context
+    - target_branch_mismatch
+    - target_not_main
+    - target_protected_or_direct_mutation_forbidden
+    - target_tracked_or_staged_dirty
+    - target_untracked_path_collision
+    - target_untracked_or_ignored_identity_changed
+    - target_head_changed_unexpectedly
+    - target_merge_in_progress
+    - no_common_ancestor
+    - predicted_conflict
+  forbidden_cleanup_commands:
+    - git_clean
+    - git_reset
+    - git_stash
+    - git_worktree_remove_force
+  forbidden_integration_commands:
+    - git_rebase
+    - git_merge_squash
+    - git_cherry_pick
+    - git_push_force
+  removal:
+    command: git_worktree_remove
+    force: false
+    require_immediate_precheck: true
+    preserve_branch_or_ref: true
+  integration:
+    command: git_merge_frozen_source_commit_oid
+    target: exact_main_worktree
+    require_target_immediate_precheck: true
+    unexpected_conflict_recovery: git_merge_abort_only
+    never_auto_revert_successful_merge: true
+  batch:
+    one_inventory: true
+    manifest_groups:
+      - SAFE
+      - HOLD
+    safe_actions:
+      - REMOVE
+    precheck_each_safe_target: true
+    evolve_expected_target_head_only_from_topology_verified_batch_merges: true
+    hold_remaining_merges_after_unexpected_target_change: true
+    continue_independent_remove_actions_when_safe: true
+    result_groups:
+      - REMOVED
+      - MERGED_AND_REMOVED
+      - MERGED_NOT_REMOVED
+      - HOLD
+      - FAILED
+      - MAIN_CONTEXT_REQUIRED
+  main_context_handoff:
+    on_isolation_denial: return_single_MAIN_CONTEXT_REQUIRED_manifest
+    handoff_is_nonterminal: true
+    continuation_uses_original_authorization: true
+    caller_resumes_automatically: true
+    additional_user_confirmation_required: false
+    retry_cross_worktree_operation: false
+    isolation_denial_is_target_risk: false
+    executor: context_owning_common_git_directory
+    executor_repeats_full_inventory_classification_and_precheck: true
+    may_not_expand_selector_target_or_destructive_effect: true
+    native_permission_prompts_remain_effective: true
+  branch_deletion:
+    default: preserve
+    governed_separately: true
+    require_no_unpushed_commits_before_delete: true
+    require_explicit_approval_before_unmerged_delete: true
+  allow_git_worktree_prune_after_report: false
+  stale_worktree_days: 14
+
+reporting:
+  include_policy_status: true
+  include_commands: true
+  include_approval_state: true
+  include_preflight: true
+  include_verification: true
+  include_worktree_path: true
+  include_branch: true
+  include_base_and_target: true
+  include_rollback_recovery_notes: true
+
+local_state:
+  directory: .git/worktree-agent
+  commit_to_repository: false

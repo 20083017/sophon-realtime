@@ -1,0 +1,10 @@
+{
+  "ssh_alias": "",
+  "expected_host": "",
+  "expected_user": "",
+  "expected_port": 22,
+  "remote_source_root": "",
+  "mario_reference_root": "",
+  "connect_timeout": 10,
+  "command_timeout": 120
+}
