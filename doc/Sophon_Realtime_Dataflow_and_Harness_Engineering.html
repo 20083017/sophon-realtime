@@ -1,0 +1,929 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sophon-Realtime | Dataflow &amp; Harness Engineering Audit</title><style>*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:22px}body{margin:0;background:#edf3f6;color:#21394a;font-family:Inter,system-ui,-apple-system,"Segoe UI","Microsoft YaHei",Arial,sans-serif;line-height:1.65}a{color:#216b9b;text-underline-offset:3px}code{font:0.91em ui-monospace,Consolas,monospace;background:#eaf0f5;color:#1e596e;border-radius:4px;padding:2px 4px;overflow-wrap:anywhere}pre{background:#142b3b;color:#e0edf5;border-radius:10px;padding:17px;overflow:auto;font-size:13px;line-height:1.55}pre code{background:none;color:inherit;padding:0;overflow-wrap:normal}aside{position:sticky;top:0;height:100vh;overflow:auto;background:#112d40;color:#d2e2ec;padding:28px 20px}aside a{display:block;padding:8px 7px;font-size:13px;color:#c5d9e7;text-decoration:none;border-radius:6px}aside a:hover,aside a.active{background:#214b62;color:white}aside h2{font-size:18px;line-height:1.25;color:white;margin:0 0 8px}aside p{font-size:12px;color:#a3c0cf;margin:0 0 20px}main{min-width:0;padding:34px clamp(15px,3vw,44px) 60px;max-width:1350px;margin:0 auto}.layout{display:grid;grid-template-columns:245px minmax(0,1fr);max-width:1750px;margin:auto}.hero{background:linear-gradient(120deg,#143344,#164c59);color:white;border-radius:18px;padding:35px 32px;margin-bottom:20px}.hero h1{margin:13px 0 12px;line-height:1.1;font-size:clamp(30px,4vw,47px);letter-spacing:-.035em}.hero p{color:#d5e8ee;margin:0;max-width:800px}.eyebrow{font-size:11px;font-weight:750;letter-spacing:2px;color:#99ddcf}.hero .meta{margin-top:20px;font-size:12px;color:#c7e1ea}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}.cards>div{background:white;border:1px solid #d7e4ec;border-radius:12px;padding:15px}.cards h3{font-size:15px;margin:0 0 5px}.cards p{font-size:13px;color:#516a7d;margin:0}section{background:white;border:1px solid #d9e5ed;border-radius:14px;margin:20px 0;padding:clamp(17px,2.5vw,30px);box-shadow:0 4px 20px #25445a08}section header{display:flex;gap:13px;align-items:flex-start;border-bottom:1px solid #e0eaf0;padding-bottom:13px;margin-bottom:17px}.num{flex:none;background:#e2f3ee;color:#216b60;padding:8px 11px;border-radius:9px;font-weight:750}h2{font-size:23px;line-height:1.22;margin:0 0 5px}header p{font-size:13px;color:#597286;margin:0}h3{font-size:17px;color:#254e69;margin:25px 0 8px}p{margin:12px 0;font-size:14px}figure{margin:17px 0;border:1px solid #d6e4ec;border-radius:12px;overflow:hidden;background:#f8fbfd}figcaption{padding:12px 16px;background:#eef5f8;color:#33576d;display:flex;gap:9px;flex-direction:column;font-size:14px}figcaption span{font-size:12px;color:#5a7485}.diagram{overflow-x:auto;padding:12px 16px;text-align:center}.diagram svg{display:block;width:auto;height:auto;max-width:100%;max-height:none;margin:auto}.tablewrap{overflow-x:auto;margin:16px 0;border:1px solid #dce7ed;border-radius:9px}table{border-collapse:collapse;width:100%;min-width:560px;font-size:13px;line-height:1.55}th{background:#eaf2f6;text-align:left;color:#294e66;font-weight:700;padding:10px 12px}td{padding:11px 12px;border-top:1px solid #e1eaf0;vertical-align:top}tr:nth-child(even) td{background:#fafcfd}.ref{font-size:11px;text-decoration:none;border-bottom:1px dotted #8aafc5;color:#22699a;white-space:nowrap}.sources,.small{font-size:12px;color:#597286}.note{padding:13px 15px;border-left:4px solid #ba984d;background:#fff9ed;border-radius:6px;font-size:13px;margin:15px 0}.legend{display:flex;gap:15px;flex-wrap:wrap;font-size:12px;color:#4d6a7e;margin:10px 0}.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}.toolbar{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#577486;margin-bottom:14px}.toolbar button{background:white;border:1px solid #c5d9e4;border-radius:7px;padding:7px 12px;color:#24536c;cursor:pointer;font:inherit}.foot{text-align:center;color:#607989;font-size:12px;margin:25px 0}.mobiletoc{display:none}@media(max-width:900px){.layout{display:block}aside{position:static;height:auto;padding:18px 22px}aside nav{display:none}.mobiletoc{display:block;background:white;padding:12px 18px;border-radius:10px;border:1px solid #dce7ed;margin:12px 0}.mobiletoc a{display:block;padding:5px;font-size:13px}.cards{grid-template-columns:1fr}.diagram svg{min-width:460px;max-width:100%;max-height:none}main{padding:15px 12px 30px}.hero{padding:24px 20px}section{padding:18px}h2{font-size:20px}}@media print{body{background:white}.layout{display:block}aside,.toolbar,.mobiletoc{display:none}main{padding:0}.hero{background:white;color:#21394a;border:1px solid #abc}.hero p,.hero .meta,.eyebrow{color:#32566c}section{box-shadow:none;break-inside:auto}figure{break-inside:avoid}.diagram svg{max-width:100%;min-width:0;max-height:760px}table{min-width:0}tr{break-inside:avoid}}</style></head><body><div class="layout"><aside><h2>Sophon-Realtime<br>Engineering Study</h2><p>Source-driven audit · Tag + Live · v1<br>2026-11-26</p><nav><a href="#architecture">01 · System topology</a><a href="#scheduling">02 · How task scheduling works</a><a href="#audio">03 · Audio and context data flow</a><a href="#direct">04 · Native skill / tool calling</a><a href="#delegation">05 · GPT-Live delegation</a><a href="#backoffice">06 · Optional BackOffice: the mini agent Harness</a><a href="#concurrency">07 · Concurrency, queues and timing</a><a href="#risks">08 · Source-level findings and risk hypotheses</a><a href="#harness">09 · Harness Engineering comparison</a><a href="#audit">10 · Practical source and runtime audit checklist</a><a href="#sources">11 · Source index and review limitations</a></nav></aside><main><div class="toolbar"><span>Standalone technical guide · no external rendering dependencies</span><button onclick="window.print()">Print / Save PDF</button></div><div class="hero"><div class="eyebrow">SYSTEM REVERSE ENGINEERING / DATAFLOW</div><h1>From audio to action</h1><p>How Sophon-Realtime schedules live conversation, moves model outputs between stages, invokes tools and collaborates with a text backend. A source-driven Harness Engineering analysis for Sophon × Mario.</p><div class="meta">Scope: Tag plugin + Live gateway · static source audit · runtime validation pending</div></div><div class="cards"><div><h3>01 · Realtime orchestration</h3><p>Acoustic turn control, speculative drafts, audio playback and interruption.</p></div><div><h3>02 · Tool orchestration</h3><p>Function parsing, local bridge, client delegation and bounded BackOffice loop.</p></div><div><h3>03 · Business Harness</h3><p>Reuse native infrastructure; retain state, authorization and verified external execution.</p></div></div><div class="legend"><span><i style="background:#DDF3EC;border:1px solid #329B83"></i>Audio / speech</span><span><i style="background:#E6EFFA;border:1px solid #668CB9"></i>Gateway / control</span><span><i style="background:#E5F2F6;border:1px solid #408BA7"></i>Inference</span><span><i style="background:#FFF1D9;border:1px solid #C89543"></i>Tools</span><span><i style="background:#ECEBFA;border:1px solid #8B86C3"></i>State / reasoning</span></div><details class="mobiletoc"><summary>Contents</summary><a href="#architecture">01 · System topology</a><a href="#scheduling">02 · How task scheduling works</a><a href="#audio">03 · Audio and context data flow</a><a href="#direct">04 · Native skill / tool calling</a><a href="#delegation">05 · GPT-Live delegation</a><a href="#backoffice">06 · Optional BackOffice: the mini agent Harness</a><a href="#concurrency">07 · Concurrency, queues and timing</a><a href="#risks">08 · Source-level findings and risk hypotheses</a><a href="#harness">09 · Harness Engineering comparison</a><a href="#audit">10 · Practical source and runtime audit checklist</a><a href="#sources">11 · Source index and review limitations</a></details><section id="architecture"><header><div class="num">01</div><div><h2>System topology</h2><p>Audio data plane · text business plane · local tool bridge</p></div></header><figure><figcaption><b>01 / End-to-end architecture</b><span>Logical topology, Tag/Flash via Live gateway. Dashed routes are alternatives, not all active at once.</span></figcaption><div class="diagram"><svg role="img" aria-label="01 / End-to-end architecture" width="708pt" height="616pt"
+ viewBox="0.00 0.00 708.42 615.92" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="overview-graph0" class="graph" transform="scale(1 1) rotate(0) translate(12.96 602.96)">
+<title>G</title>
+<!-- client -->
+<g id="overview-node1" class="node">
+<title>client</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M447,-590C447,-590 326,-590 326,-590 320,-590 314,-584 314,-578 314,-578 314,-558 314,-558 314,-552 320,-546 326,-546 326,-546 447,-546 447,-546 453,-546 459,-552 459,-558 459,-558 459,-578 459,-578 459,-584 453,-590 447,-590"/>
+<text text-anchor="middle" x="386.5" y="-571.4" font-family="Arial" font-size="12.00" fill="#18374a">Customer / client</text>
+<text text-anchor="middle" x="386.5" y="-558.4" font-family="Arial" font-size="12.00" fill="#18374a">Microphone + speaker</text>
+</g>
+<!-- gw -->
+<g id="overview-node2" class="node">
+<title>gw</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M474.5,-499C474.5,-499 298.5,-499 298.5,-499 292.5,-499 286.5,-493 286.5,-487 286.5,-487 286.5,-467 286.5,-467 286.5,-461 292.5,-455 298.5,-455 298.5,-455 474.5,-455 474.5,-455 480.5,-455 486.5,-461 486.5,-467 486.5,-467 486.5,-487 486.5,-487 486.5,-493 480.5,-499 474.5,-499"/>
+<text text-anchor="middle" x="386.5" y="-480.4" font-family="Arial" font-size="12.00" fill="#18374a">Live gateway</text>
+<text text-anchor="middle" x="386.5" y="-467.4" font-family="Arial" font-size="12.00" fill="#18374a">/v1/live/sessions OR /v1/realtime</text>
+</g>
+<!-- client&#45;&gt;gw -->
+<g id="overview-edge1" class="edge">
+<title>client&#45;&gt;gw</title>
+<path fill="none" stroke="#329b83" stroke-width="1.25" d="M386.5,-538.3C386.5,-528.28 386.5,-517.04 386.5,-507"/>
+<polygon fill="#329b83" stroke="#329b83" stroke-width="1.25" points="383.88,-538.41 386.5,-545.91 389.13,-538.41 383.88,-538.41"/>
+<polygon fill="#329b83" stroke="#329b83" stroke-width="1.25" points="389.13,-506.75 386.5,-499.25 383.88,-506.75 389.13,-506.75"/>
+<text text-anchor="middle" x="446" y="-520" font-family="Arial" font-size="10.00" fill="#39566a">audio / commands / events</text>
+</g>
+<!-- asr -->
+<g id="overview-node3" class="node">
+<title>asr</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M670.5,-499C670.5,-499 592.5,-499 592.5,-499 586.5,-499 580.5,-493 580.5,-487 580.5,-487 580.5,-467 580.5,-467 580.5,-461 586.5,-455 592.5,-455 592.5,-455 670.5,-455 670.5,-455 676.5,-455 682.5,-461 682.5,-467 682.5,-467 682.5,-487 682.5,-487 682.5,-493 676.5,-499 670.5,-499"/>
+<text text-anchor="middle" x="631.5" y="-480.4" font-family="Arial" font-size="12.00" fill="#18374a">Auxiliary ASR</text>
+<text text-anchor="middle" x="631.5" y="-467.4" font-family="Arial" font-size="12.00" fill="#18374a">text / item IDs</text>
+</g>
+<!-- gw&#45;&gt;asr -->
+<g id="overview-edge2" class="edge">
+<title>gw&#45;&gt;asr</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M486.5,-477C515.89,-477 547.06,-477 572.94,-477"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="572.95,-479.63 580.45,-477 572.95,-474.38 572.95,-479.63"/>
+<text text-anchor="middle" x="533.5" y="-483" font-family="Arial" font-size="10.00" fill="#39566a">audio segments</text>
+</g>
+<!-- adapter -->
+<g id="overview-node4" class="node">
+<title>adapter</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M363.5,-408C363.5,-408 195.5,-408 195.5,-408 189.5,-408 183.5,-402 183.5,-396 183.5,-396 183.5,-376 183.5,-376 183.5,-370 189.5,-364 195.5,-364 195.5,-364 363.5,-364 363.5,-364 369.5,-364 375.5,-370 375.5,-376 375.5,-376 375.5,-396 375.5,-396 375.5,-402 369.5,-408 363.5,-408"/>
+<text text-anchor="middle" x="279.5" y="-389.4" font-family="Arial" font-size="12.00" fill="#18374a">VllmOmniAdapter</text>
+<text text-anchor="middle" x="279.5" y="-376.4" font-family="Arial" font-size="12.00" fill="#18374a">WebSocket + HTTP tool bridge</text>
+</g>
+<!-- gw&#45;&gt;adapter -->
+<g id="overview-edge4" class="edge">
+<title>gw&#45;&gt;adapter</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M346.87,-450.66C335.2,-443.2 325.5,-437 325.5,-437 325.5,-437 315.19,-425.8 304.34,-414"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="345.77,-453.07 353.5,-454.9 348.6,-448.65 345.77,-453.07"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="306.02,-411.95 299.01,-408.2 302.15,-415.5 306.02,-411.95"/>
+<text text-anchor="middle" x="393" y="-429" font-family="Arial" font-size="10.00" fill="#39566a">PCM / settings / output events</text>
+</g>
+<!-- backend -->
+<g id="overview-node10" class="node">
+<title>backend</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M566.5,-226C566.5,-226 458.5,-226 458.5,-226 452.5,-226 446.5,-220 446.5,-214 446.5,-214 446.5,-194 446.5,-194 446.5,-188 452.5,-182 458.5,-182 458.5,-182 566.5,-182 566.5,-182 572.5,-182 578.5,-188 578.5,-194 578.5,-194 578.5,-214 578.5,-214 578.5,-220 572.5,-226 566.5,-226"/>
+<text text-anchor="middle" x="512.5" y="-207.4" font-family="Arial" font-size="12.00" fill="#18374a">Optional BackOffice</text>
+<text text-anchor="middle" x="512.5" y="-194.4" font-family="Arial" font-size="12.00" fill="#18374a">text LLM + tool loop</text>
+</g>
+<!-- gw&#45;&gt;backend -->
+<g id="overview-edge12" class="edge">
+<title>gw&#45;&gt;backend</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" stroke-dasharray="5,2" d="M434.66,-451.29C449.73,-443.55 462.5,-437 462.5,-437 462.5,-437 478.5,-335 478.5,-335 478.5,-335 495.05,-271.73 505.05,-233.47"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="433.09,-449.14 427.61,-454.9 435.49,-453.81 433.09,-449.14"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="507.6,-234.1 506.96,-226.18 502.52,-232.77 507.6,-234.1"/>
+<text text-anchor="middle" x="513.5" y="-338" font-family="Arial" font-size="10.00" fill="#39566a">delegate / result</text>
+</g>
+<!-- exec -->
+<g id="overview-node11" class="node">
+<title>exec</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M589,-135C589,-135 436,-135 436,-135 430,-135 424,-129 424,-123 424,-123 424,-103 424,-103 424,-97 430,-91 436,-91 436,-91 589,-91 589,-91 595,-91 601,-97 601,-103 601,-103 601,-123 601,-123 601,-129 595,-135 589,-135"/>
+<text text-anchor="middle" x="512.5" y="-116.4" font-family="Arial" font-size="12.00" fill="#18374a">External tool executor</text>
+<text text-anchor="middle" x="512.5" y="-103.4" font-family="Arial" font-size="12.00" fill="#18374a">Mario / business APIs / RAG</text>
+</g>
+<!-- gw&#45;&gt;exec -->
+<g id="overview-edge14" class="edge">
+<title>gw&#45;&gt;exec</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" stroke-dasharray="5,2" d="M445.53,-452.02C465.34,-443.97 482.5,-437 482.5,-437 482.5,-437 550.5,-346 550.5,-346 550.5,-346 590.5,-226 590.5,-226 590.5,-226 610.5,-164 610.5,-164 610.5,-164 610.5,-153 610.5,-153 610.5,-153 592.83,-145.97 572.49,-137.87"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="444.39,-449.65 438.43,-454.9 446.37,-454.51 444.39,-449.65"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="573.45,-135.43 565.52,-135.1 571.51,-140.31 573.45,-135.43"/>
+<text text-anchor="middle" x="624.5" y="-292.5" font-family="Arial" font-size="10.00" fill="#39566a">client calls / delegation</text>
+</g>
+<!-- asr&#45;&gt;gw -->
+<g id="overview-edge3" class="edge">
+<title>asr&#45;&gt;gw</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M580.24,-467.74C565.83,-465.14 554,-463 554,-463 554,-463 513,-463 513,-463 513,-463 505.55,-463.82 494.27,-465.07"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="493.95,-462.47 486.79,-465.9 494.53,-467.68 493.95,-462.47"/>
+<text text-anchor="middle" x="533.5" y="-466" font-family="Arial" font-size="10.00" fill="#39566a">transcript</text>
+</g>
+<!-- buf -->
+<g id="overview-node5" class="node">
+<title>buf</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M320.5,-317C320.5,-317 134.5,-317 134.5,-317 128.5,-317 122.5,-311 122.5,-305 122.5,-305 122.5,-285 122.5,-285 122.5,-279 128.5,-273 134.5,-273 134.5,-273 320.5,-273 320.5,-273 326.5,-273 332.5,-279 332.5,-285 332.5,-285 332.5,-305 332.5,-305 332.5,-311 326.5,-317 320.5,-317"/>
+<text text-anchor="middle" x="227.5" y="-298.4" font-family="Arial" font-size="12.00" fill="#18374a">SophonBuffer + Duplex plugin</text>
+<text text-anchor="middle" x="227.5" y="-285.4" font-family="Arial" font-size="12.00" fill="#18374a">acoustic turn control / audio history</text>
+</g>
+<!-- adapter&#45;&gt;buf -->
+<g id="overview-edge5" class="edge">
+<title>adapter&#45;&gt;buf</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M267.18,-363.91C260.17,-351.91 251.31,-336.75 243.74,-323.79"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="245.97,-322.4 239.92,-317.25 241.43,-325.05 245.97,-322.4"/>
+<text text-anchor="middle" x="293.5" y="-338" font-family="Arial" font-size="10.00" fill="#39566a">continuous input</text>
+</g>
+<!-- think -->
+<g id="overview-node6" class="node">
+<title>think</title>
+<path fill="#e5f2f6" stroke="#408ba7" stroke-width="1.4" d="M256,-226C256,-226 133,-226 133,-226 127,-226 121,-220 121,-214 121,-214 121,-194 121,-194 121,-188 127,-182 133,-182 133,-182 256,-182 256,-182 262,-182 268,-188 268,-194 268,-194 268,-214 268,-214 268,-220 262,-226 256,-226"/>
+<text text-anchor="middle" x="194.5" y="-207.4" font-family="Arial" font-size="12.00" fill="#18374a">Stage 0 Thinker</text>
+<text text-anchor="middle" x="194.5" y="-194.4" font-family="Arial" font-size="12.00" fill="#18374a">reply tokens / tool calls</text>
+</g>
+<!-- buf&#45;&gt;think -->
+<g id="overview-edge6" class="edge">
+<title>buf&#45;&gt;think</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M219.68,-272.91C215.31,-261.13 209.82,-246.3 205.07,-233.51"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="207.45,-232.37 202.38,-226.25 202.53,-234.19 207.45,-232.37"/>
+<text text-anchor="middle" x="266" y="-247" font-family="Arial" font-size="10.00" fill="#39566a">check / reply / follow&#45;up</text>
+</g>
+<!-- proc -->
+<g id="overview-node7" class="node">
+<title>proc</title>
+<path fill="#e5f2f6" stroke="#408ba7" stroke-width="1.4" d="M147.5,-135C147.5,-135 21.5,-135 21.5,-135 15.5,-135 9.5,-129 9.5,-123 9.5,-123 9.5,-103 9.5,-103 9.5,-97 15.5,-91 21.5,-91 21.5,-91 147.5,-91 147.5,-91 153.5,-91 159.5,-97 159.5,-103 159.5,-103 159.5,-123 159.5,-123 159.5,-129 153.5,-135 147.5,-135"/>
+<text text-anchor="middle" x="84.5" y="-116.4" font-family="Arial" font-size="12.00" fill="#18374a">Stage handoff (proc.py)</text>
+<text text-anchor="middle" x="84.5" y="-103.4" font-family="Arial" font-size="12.00" fill="#18374a">spoken tokens only</text>
+</g>
+<!-- think&#45;&gt;proc -->
+<g id="overview-edge7" class="edge">
+<title>think&#45;&gt;proc</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M168.43,-181.91C152.93,-169.36 133.14,-153.35 116.67,-140.03"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="118.24,-137.93 110.76,-135.25 114.94,-142.01 118.24,-137.93"/>
+<text text-anchor="middle" x="173.5" y="-156" font-family="Arial" font-size="10.00" fill="#39566a">reply tokens</text>
+</g>
+<!-- bridge -->
+<g id="overview-node9" class="node">
+<title>bridge</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M307,-135C307,-135 196,-135 196,-135 190,-135 184,-129 184,-123 184,-123 184,-103 184,-103 184,-97 190,-91 196,-91 196,-91 307,-91 307,-91 313,-91 319,-97 319,-103 319,-103 319,-123 319,-123 319,-129 313,-135 307,-135"/>
+<text text-anchor="middle" x="251.5" y="-116.4" font-family="Arial" font-size="12.00" fill="#18374a">Local tool bridge</text>
+<text text-anchor="middle" x="251.5" y="-103.4" font-family="Arial" font-size="12.00" fill="#18374a">per&#45;key event queue</text>
+</g>
+<!-- think&#45;&gt;bridge -->
+<g id="overview-edge10" class="edge">
+<title>think&#45;&gt;bridge</title>
+<path fill="none" stroke="#c89543" stroke-width="1.25" d="M208.01,-181.91C215.69,-169.91 225.4,-154.75 233.7,-141.79"/>
+<polygon fill="#c89543" stroke="#c89543" stroke-width="1.25" points="236.06,-142.98 237.89,-135.25 231.64,-140.15 236.06,-142.98"/>
+<text text-anchor="middle" x="253" y="-156" font-family="Arial" font-size="10.00" fill="#39566a">parsed calls</text>
+</g>
+<!-- voice -->
+<g id="overview-node8" class="node">
+<title>voice</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M157,-44C157,-44 12,-44 12,-44 6,-44 0,-38 0,-32 0,-32 0,-12 0,-12 0,-6 6,0 12,0 12,0 157,0 157,0 163,0 169,-6 169,-12 169,-12 169,-32 169,-32 169,-38 163,-44 157,-44"/>
+<text text-anchor="middle" x="84.5" y="-25.4" font-family="Arial" font-size="12.00" fill="#18374a">Tag: Talker → code2wav</text>
+<text text-anchor="middle" x="84.5" y="-12.4" font-family="Arial" font-size="12.00" fill="#18374a">Flash: different voice stage</text>
+</g>
+<!-- proc&#45;&gt;voice -->
+<g id="overview-edge8" class="edge">
+<title>proc&#45;&gt;voice</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M84.5,-90.91C84.5,-79.24 84.5,-64.58 84.5,-51.87"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="87.13,-51.75 84.5,-44.25 81.88,-51.75 87.13,-51.75"/>
+<text text-anchor="middle" x="112.5" y="-65" font-family="Arial" font-size="10.00" fill="#39566a">voice tokens</text>
+</g>
+<!-- voice&#45;&gt;adapter -->
+<g id="overview-edge9" class="edge">
+<title>voice&#45;&gt;adapter</title>
+<path fill="none" stroke="#329b83" stroke-width="1.25" d="M160.65,-44.05C232.9,-64.02 330.5,-91 330.5,-91 330.5,-91 344.5,-273 344.5,-273 344.5,-273 344.5,-317 344.5,-317 344.5,-317 335.5,-346 335.5,-346 335.5,-346 326.76,-352.09 316.18,-359.45"/>
+<polygon fill="#329b83" stroke="#329b83" stroke-width="1.25" points="314.45,-357.46 309.79,-363.9 317.45,-361.77 314.45,-357.46"/>
+<text text-anchor="middle" x="369.5" y="-201.5" font-family="Arial" font-size="10.00" fill="#39566a">audio events</text>
+</g>
+<!-- bridge&#45;&gt;adapter -->
+<g id="overview-edge11" class="edge">
+<title>bridge&#45;&gt;adapter</title>
+<path fill="none" stroke="#c89543" stroke-width="1.25" d="M297.66,-138.72C333.98,-158.16 378.5,-182 378.5,-182 378.5,-182 394.5,-273 394.5,-273 394.5,-273 394.5,-317 394.5,-317 394.5,-317 380.5,-346 380.5,-346 380.5,-346 362.29,-353.03 341.33,-361.13"/>
+<polygon fill="#c89543" stroke="#c89543" stroke-width="1.25" points="298.84,-136.37 290.99,-135.14 296.36,-141 298.84,-136.37"/>
+<polygon fill="#c89543" stroke="#c89543" stroke-width="1.25" points="340.19,-358.75 334.14,-363.9 342.08,-363.65 340.19,-358.75"/>
+<text text-anchor="middle" x="418.5" y="-247" font-family="Arial" font-size="10.00" fill="#39566a">poll / results</text>
+</g>
+<!-- backend&#45;&gt;exec -->
+<g id="overview-edge13" class="edge">
+<title>backend&#45;&gt;exec</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M511.75,-173.92C511.61,-168.24 511.5,-164 511.5,-164 511.5,-164 511.5,-153 511.5,-153 511.5,-153 511.61,-148.76 511.75,-143.08"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="509.14,-174.24 511.95,-181.67 514.38,-174.11 509.14,-174.24"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="514.38,-142.89 511.95,-135.33 509.14,-142.76 514.38,-142.89"/>
+<text text-anchor="middle" x="560" y="-156" font-family="Arial" font-size="10.00" fill="#39566a">function calls / results</text>
+</g>
+</g>
+</svg>
+</div></figure><p>The reference path is the <strong>Tag engine through the Live gateway</strong>. Flash shares the reply-writing concept but has a different speech stage; E2E and Mac are not audited line by line here. The direct engine endpoint and the gateway’s Realtime endpoint are different processes/interfaces even when both are named <code>/v1/realtime</code>.</p><div class="tablewrap"><table><thead><tr><th>Layer</th><th>Actual boundary</th><th>What crosses it</th></tr></thead><tbody><tr><td>Client → gateway</td><td>WebSocket</td><td>PCM, session instructions/tools, result events</td></tr><tr><td>Gateway → engine</td><td>VllmOmniAdapter</td><td>Normalized 16 kHz mono float32 audio; settings over WS; tools over local HTTP bridge</td></tr><tr><td>Engine input → stage 0</td><td>Duplex append plan</td><td>Audio + rendered messages; short classification request or reply request</td></tr><tr><td>Stage 0 → speech stages</td><td>Stage processor</td><td>Speakable token stream (tool markup removed); voice conditioning</td></tr><tr><td>Engine → gateway</td><td>Adapter queue</td><td>Audio/text/done/cancel/error/tool_call</td></tr><tr><td>Gateway → business client</td><td>Public protocol</td><td>Delegation or function-call request; correlated result</td></tr></tbody></table></div><p class="sources">Evidence: <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/README.md" target="_blank" rel="noopener">LR</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/adapters.py#L1-L84" target="_blank" rel="noopener">A:1–84</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L654-L687" target="_blank" rel="noopener">D:654–687</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L808-L895" target="_blank" rel="noopener">D:808–895</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/proc.py#L119-L149" target="_blank" rel="noopener">P:119–149</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/README.md" target="_blank" rel="noopener">TR</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/flash/README.md" target="_blank" rel="noopener">FR</a></p></section><section id="scheduling"><header><div class="num">02</div><div><h2>How task scheduling works</h2><p>Three distinct schedulers; no general workflow scheduler is implied</p></div></header><figure><figcaption><b>02 / Turn scheduling and speculative generation</b><span>Acoustic decision loop; the business action gate must be separate from the audio release gate.</span></figcaption><div class="diagram"><svg role="img" aria-label="02 / Turn scheduling and speculative generation" width="508pt" height="705pt"
+ viewBox="0.00 0.00 507.92 704.92" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="turn-graph0" class="graph" transform="scale(1 1) rotate(0) translate(12.96 691.96)">
+<title>G</title>
+<!-- input -->
+<g id="turn-node1" class="node">
+<title>input</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M294,-679C294,-679 110,-679 110,-679 104,-679 98,-673 98,-667 98,-667 98,-655 98,-655 98,-649 104,-643 110,-643 110,-643 294,-643 294,-643 300,-643 306,-649 306,-655 306,-655 306,-667 306,-667 306,-673 300,-679 294,-679"/>
+<text text-anchor="middle" x="202" y="-657.9" font-family="Arial" font-size="12.00" fill="#18374a">Continuous PCM + silence frames</text>
+</g>
+<!-- collect -->
+<g id="turn-node2" class="node">
+<title>collect</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M304.5,-606C304.5,-606 99.5,-606 99.5,-606 93.5,-606 87.5,-600 87.5,-594 87.5,-594 87.5,-574 87.5,-574 87.5,-568 93.5,-562 99.5,-562 99.5,-562 304.5,-562 304.5,-562 310.5,-562 316.5,-568 316.5,-574 316.5,-574 316.5,-594 316.5,-594 316.5,-600 310.5,-606 304.5,-606"/>
+<text text-anchor="middle" x="202" y="-587.4" font-family="Arial" font-size="12.00" fill="#18374a">SophonBuffer</text>
+<text text-anchor="middle" x="202" y="-574.4" font-family="Arial" font-size="12.00" fill="#18374a">20 ms energy frames / utterance buffer</text>
+</g>
+<!-- input&#45;&gt;collect -->
+<g id="turn-edge1" class="edge">
+<title>input&#45;&gt;collect</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M202,-642.98C202,-634.39 202,-623.72 202,-613.89"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="204.63,-613.74 202,-606.24 199.38,-613.74 204.63,-613.74"/>
+</g>
+<!-- draft -->
+<g id="turn-node3" class="node">
+<title>draft</title>
+<path fill="#e5f2f6" stroke="#408ba7" stroke-width="1.4" d="M171.5,-515C171.5,-515 40.5,-515 40.5,-515 34.5,-515 28.5,-509 28.5,-503 28.5,-503 28.5,-483 28.5,-483 28.5,-477 34.5,-471 40.5,-471 40.5,-471 171.5,-471 171.5,-471 177.5,-471 183.5,-477 183.5,-483 183.5,-483 183.5,-503 183.5,-503 183.5,-509 177.5,-515 171.5,-515"/>
+<text text-anchor="middle" x="106" y="-496.4" font-family="Arial" font-size="12.00" fill="#18374a">Early draft</text>
+<text text-anchor="middle" x="106" y="-483.4" font-family="Arial" font-size="12.00" fill="#18374a">SPEC_AT default 50 ms</text>
+</g>
+<!-- collect&#45;&gt;draft -->
+<g id="turn-edge2" class="edge">
+<title>collect&#45;&gt;draft</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M179.25,-561.91C165.84,-549.47 148.75,-533.63 134.45,-520.38"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="136.2,-518.42 128.92,-515.25 132.64,-522.27 136.2,-518.42"/>
+<text text-anchor="middle" x="186" y="-536" font-family="Arial" font-size="10.00" fill="#39566a">short pause</text>
+</g>
+<!-- check -->
+<g id="turn-node4" class="node">
+<title>check</title>
+<path fill="#e5f2f6" stroke="#408ba7" stroke-width="1.4" d="M383,-515C383,-515 225,-515 225,-515 219,-515 213,-509 213,-503 213,-503 213,-483 213,-483 213,-477 219,-471 225,-471 225,-471 383,-471 383,-471 389,-471 395,-477 395,-483 395,-483 395,-503 395,-503 395,-509 389,-515 383,-515"/>
+<text text-anchor="middle" x="304" y="-496.4" font-family="Arial" font-size="12.00" fill="#18374a">Stage&#45;0 turn question</text>
+<text text-anchor="middle" x="304" y="-483.4" font-family="Arial" font-size="12.00" fill="#18374a">background thread / logprobs</text>
+</g>
+<!-- collect&#45;&gt;check -->
+<g id="turn-edge3" class="edge">
+<title>collect&#45;&gt;check</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M226.17,-561.91C240.42,-549.47 258.58,-533.63 273.77,-520.38"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="275.72,-522.16 279.65,-515.25 272.27,-518.2 275.72,-522.16"/>
+<text text-anchor="middle" x="309" y="-536" font-family="Arial" font-size="10.00" fill="#39566a">scheduled checkpoints</text>
+</g>
+<!-- held -->
+<g id="turn-node6" class="node">
+<title>held</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M140,-402C140,-402 12,-402 12,-402 6,-402 0,-396 0,-390 0,-390 0,-370 0,-370 0,-364 6,-358 12,-358 12,-358 140,-358 140,-358 146,-358 152,-364 152,-370 152,-370 152,-390 152,-390 152,-396 146,-402 140,-402"/>
+<text text-anchor="middle" x="76" y="-383.4" font-family="Arial" font-size="12.00" fill="#18374a">Hold speculative output</text>
+<text text-anchor="middle" x="76" y="-370.4" font-family="Arial" font-size="12.00" fill="#18374a">by spec_id / gen</text>
+</g>
+<!-- draft&#45;&gt;held -->
+<g id="turn-edge4" class="edge">
+<title>draft&#45;&gt;held</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M100.29,-470.86C95.57,-453.42 88.85,-428.53 83.66,-409.36"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="86.18,-408.62 81.69,-402.06 81.11,-409.99 86.18,-408.62"/>
+</g>
+<!-- dec -->
+<g id="turn-node5" class="node">
+<title>dec</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M298.6,-420.26C298.6,-420.26 187.4,-383.74 187.4,-383.74 181.7,-381.87 181.7,-378.13 187.4,-376.26 187.4,-376.26 298.6,-339.74 298.6,-339.74 304.3,-337.87 315.7,-337.87 321.4,-339.74 321.4,-339.74 432.6,-376.26 432.6,-376.26 438.3,-378.13 438.3,-381.87 432.6,-383.74 432.6,-383.74 321.4,-420.26 321.4,-420.26 315.7,-422.13 304.3,-422.13 298.6,-420.26"/>
+<text text-anchor="middle" x="310" y="-383.4" font-family="Arial" font-size="12.00" fill="#18374a">Finished?</text>
+<text text-anchor="middle" x="310" y="-370.4" font-family="Arial" font-size="12.00" fill="#18374a">threshold or fallback</text>
+</g>
+<!-- check&#45;&gt;dec -->
+<g id="turn-edge5" class="edge">
+<title>check&#45;&gt;dec</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M305.14,-470.86C305.75,-459.61 306.53,-445.25 307.28,-431.33"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="309.91,-431.3 307.69,-423.66 304.67,-431.01 309.91,-431.3"/>
+</g>
+<!-- wait -->
+<g id="turn-node7" class="node">
+<title>wait</title>
+<path fill="#f0f4f7" stroke="#9aaebb" stroke-width="1.4" d="M391,-289C391,-289 229,-289 229,-289 223,-289 217,-283 217,-277 217,-277 217,-257 217,-257 217,-251 223,-245 229,-245 229,-245 391,-245 391,-245 397,-245 403,-251 403,-257 403,-257 403,-277 403,-277 403,-283 397,-289 391,-289"/>
+<text text-anchor="middle" x="310" y="-270.4" font-family="Arial" font-size="12.00" fill="#18374a">Wait / backchannel resume</text>
+<text text-anchor="middle" x="310" y="-257.4" font-family="Arial" font-size="12.00" fill="#18374a">new speech invalidates check</text>
+</g>
+<!-- dec&#45;&gt;wait -->
+<g id="turn-edge6" class="edge">
+<title>dec&#45;&gt;wait</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M310,-335.77C310,-322.81 310,-308.91 310,-297.1"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="312.63,-296.78 310,-289.28 307.38,-296.78 312.63,-296.78"/>
+<text text-anchor="middle" x="325.5" y="-310" font-family="Arial" font-size="10.00" fill="#39566a">not yet</text>
+</g>
+<!-- release -->
+<g id="turn-node8" class="node">
+<title>release</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M171,-289C171,-289 45,-289 45,-289 39,-289 33,-283 33,-277 33,-277 33,-257 33,-257 33,-251 39,-245 45,-245 45,-245 171,-245 171,-245 177,-245 183,-251 183,-257 183,-257 183,-277 183,-277 183,-283 177,-289 171,-289"/>
+<text text-anchor="middle" x="108" y="-270.4" font-family="Arial" font-size="12.00" fill="#18374a">Release matching draft</text>
+<text text-anchor="middle" x="108" y="-257.4" font-family="Arial" font-size="12.00" fill="#18374a">or create fresh reply</text>
+</g>
+<!-- dec&#45;&gt;release -->
+<g id="turn-edge8" class="edge">
+<title>dec&#45;&gt;release</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M260.84,-351.99C227.92,-333.9 184.91,-310.26 152.9,-292.67"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="154.08,-290.33 146.25,-289.02 151.55,-294.93 154.08,-290.33"/>
+<text text-anchor="middle" x="205" y="-310" font-family="Arial" font-size="10.00" fill="#39566a">yes</text>
+</g>
+<!-- held&#45;&gt;release -->
+<g id="turn-edge9" class="edge">
+<title>held&#45;&gt;release</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M82.09,-357.86C87.12,-340.42 94.3,-315.53 99.82,-296.36"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="102.37,-296.99 101.93,-289.06 97.33,-295.54 102.37,-296.99"/>
+<text text-anchor="middle" x="133.5" y="-310" font-family="Arial" font-size="10.00" fill="#39566a">same generation</text>
+</g>
+<!-- wait&#45;&gt;collect -->
+<g id="turn-edge7" class="edge">
+<title>wait&#45;&gt;collect</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M354.65,-289.06C383.62,-302.72 416,-318 416,-318 416,-318 456,-336 456,-336 456,-336 456,-424 456,-424 456,-424 390,-442 390,-442 390,-442 390,-453 390,-453 390,-453 407,-471 407,-471 407,-471 407,-515 407,-515 407,-515 365,-544 365,-544 365,-544 333.26,-551.59 297.79,-560.08"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="296.86,-557.6 290.18,-561.9 298.08,-562.71 296.86,-557.6"/>
+<text text-anchor="middle" x="420.5" y="-445" font-family="Arial" font-size="10.00" fill="#39566a">continue input</text>
+</g>
+<!-- speak -->
+<g id="turn-node9" class="node">
+<title>speak</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M175.5,-208C175.5,-208 40.5,-208 40.5,-208 34.5,-208 28.5,-202 28.5,-196 28.5,-196 28.5,-176 28.5,-176 28.5,-170 34.5,-164 40.5,-164 40.5,-164 175.5,-164 175.5,-164 181.5,-164 187.5,-170 187.5,-176 187.5,-176 187.5,-196 187.5,-196 187.5,-202 181.5,-208 175.5,-208"/>
+<text text-anchor="middle" x="108" y="-189.4" font-family="Arial" font-size="12.00" fill="#18374a">Stream text / audio</text>
+<text text-anchor="middle" x="108" y="-176.4" font-family="Arial" font-size="12.00" fill="#18374a">record playback estimate</text>
+</g>
+<!-- release&#45;&gt;speak -->
+<g id="turn-edge10" class="edge">
+<title>release&#45;&gt;speak</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M108,-244.83C108,-235.97 108,-225.54 108,-215.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="110.63,-215.73 108,-208.23 105.38,-215.73 110.63,-215.73"/>
+</g>
+<!-- barge -->
+<g id="turn-node10" class="node">
+<title>barge</title>
+<path fill="#fcebe8" stroke="#c77e70" stroke-width="1.4" d="M178.5,-117C178.5,-117 37.5,-117 37.5,-117 31.5,-117 25.5,-111 25.5,-105 25.5,-105 25.5,-93 25.5,-93 25.5,-87 31.5,-81 37.5,-81 37.5,-81 178.5,-81 178.5,-81 184.5,-81 190.5,-87 190.5,-93 190.5,-93 190.5,-105 190.5,-105 190.5,-111 184.5,-117 178.5,-117"/>
+<text text-anchor="middle" x="108" y="-95.9" font-family="Arial" font-size="12.00" fill="#18374a">User interrupts / continues</text>
+</g>
+<!-- speak&#45;&gt;barge -->
+<g id="turn-edge11" class="edge">
+<title>speak&#45;&gt;barge</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M108,-163.99C108,-152.13 108,-137.25 108,-124.82"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="110.63,-124.56 108,-117.06 105.38,-124.56 110.63,-124.56"/>
+<text text-anchor="middle" x="124" y="-138" font-family="Arial" font-size="10.00" fill="#39566a">overlap</text>
+</g>
+<!-- history -->
+<g id="turn-node11" class="node">
+<title>history</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M181.5,-44C181.5,-44 34.5,-44 34.5,-44 28.5,-44 22.5,-38 22.5,-32 22.5,-32 22.5,-12 22.5,-12 22.5,-6 28.5,0 34.5,0 34.5,0 181.5,0 181.5,0 187.5,0 193.5,-6 193.5,-12 193.5,-12 193.5,-32 193.5,-32 193.5,-38 187.5,-44 181.5,-44"/>
+<text text-anchor="middle" x="108" y="-25.4" font-family="Arial" font-size="12.00" fill="#18374a">Cut / merge / resume</text>
+<text text-anchor="middle" x="108" y="-12.4" font-family="Arial" font-size="12.00" fill="#18374a">update audio&#45;aware history</text>
+</g>
+<!-- barge&#45;&gt;history -->
+<g id="turn-edge12" class="edge">
+<title>barge&#45;&gt;history</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M108,-80.98C108,-72.39 108,-61.72 108,-51.89"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="110.63,-51.74 108,-44.24 105.38,-51.74 110.63,-51.74"/>
+</g>
+<!-- history&#45;&gt;collect -->
+<g id="turn-edge13" class="edge">
+<title>history&#45;&gt;collect</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M142.2,-44.1C169.08,-60.69 202,-81 202,-81 202,-81 415,-245 415,-245 415,-245 475,-336 475,-336 475,-336 475,-424 475,-424 475,-424 426,-515 426,-515 426,-515 391,-544 391,-544 391,-544 353.27,-551.79 311.52,-560.4"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="310.78,-557.87 303.97,-561.96 311.84,-563.01 310.78,-557.87"/>
+<text text-anchor="middle" x="462.5" y="-264.5" font-family="Arial" font-size="10.00" fill="#39566a">next turn</text>
+</g>
+</g>
+</svg>
+</div></figure><h3>2.1 Acoustic turn control</h3><p>Speech and silence are continuously accumulated. A pause starts a speculative reply and a sequence of separate turn-classification requests. The latter ask stage 0 for one letter, then normalize scores across four choices. The two scores consumed by the active thread are finished and backchannel. A generation counter invalidates answers to obsolete checks. These are internal model scores, not calibrated business confidence.</p><div class="tablewrap"><table><thead><tr><th>Default parameter (Tag)</th><th>Value</th><th>Engineering purpose</th></tr></thead><tbody><tr><td>SOPHON_SPEC_AT / SPEC_MIN_SPEECH</td><td>0.05 s / 0.3 s</td><td>Early draft after enough speech; can be disabled</td></tr><tr><td>SOPHON_TURN_CHECKS</td><td>0.2, 0.35, 0.5, 0.8, 1.3, 2.0 s</td><td>Pause checkpoints (relative to silence onset)</td></tr><tr><td>SOPHON_TURN_THRESHOLDS</td><td>0.95, 0.85, 0.7, 0.5, 0.35, 0.25</td><td>Progressively lower finish thresholds</td></tr><tr><td>SOPHON_TURN_FALLBACK</td><td>2.0 s</td><td>Fallback reply; optional short-sound suppression is configuration-dependent</td></tr><tr><td>SOPHON_RES_TIMEOUT / RETRY_MAX</td><td>15 s / 3</td><td>Rollback unconfirmed append, bounded resend; not tool retries</td></tr><tr><td>BC_RESUME / BC_WINDOW</td><td>on / 4.0 s</td><td>Candidate resumption of interrupted response on backchannel</td></tr></tbody></table></div><p class="sources">Evidence: <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L31-L40" target="_blank" rel="noopener">D:31–40</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L87-L97" target="_blank" rel="noopener">D:87–97</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L182-L205" target="_blank" rel="noopener">D:182–205</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L296-L315" target="_blank" rel="noopener">D:296–315</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L433-L514" target="_blank" rel="noopener">D:433–514</a></p><h3>2.2 Inference scheduler vs. policy</h3><p>The plugin determines what to submit and when; vLLM-Omni owns the actual execution schedule and multi-stage handoff. The turn check runs via a background thread requesting stage 0 through HTTP, rather than advancing the active duplex append fence. The code publishes runner-backed data-plane metadata. This review does not infer the GPU batch ordering, priority policy, KV eviction, or admission algorithm from those flags alone.</p><h3>2.3 Recovery and priority</h3><p>Input reservations support commit/rollback. The inspected append loop checks queued exact speech, tool follow-up and failed-append retry before ordinary turn checks, subject to its silence/admission conditions. A resumed utterance can invalidate an earlier draft; a short backchannel can resume a cut answer. A generation fence protects the inference decision, but not automatically a business side effect.</p><p class="sources">Evidence: <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L207-L229" target="_blank" rel="noopener">D:207–229</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L382-L431" target="_blank" rel="noopener">D:382–431</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L490-L514" target="_blank" rel="noopener">D:490–514</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L613-L633" target="_blank" rel="noopener">D:613–633</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L676-L683" target="_blank" rel="noopener">D:676–683</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L900-L927" target="_blank" rel="noopener">D:900–927</a></p></section><section id="audio"><header><div class="num">03</div><div><h2>Audio and context data flow</h2><p>What is actually processed by Thinker and what reaches a text backend</p></div></header><p>Native reasoning is audio-first: the reply prompt carries the current speech plus reconstructed history, instructions and tool schemas. The gateway’s auxiliary ASR is a separate transcript path, not a required intermediate representation for the Thinker. For Tag, stage 0 emits text with optional vocal markup; the stage processor converts the speakable part into Talker tokens, and stage 2 produces audio. Turn-check requests are excluded from speech synthesis.</p><div class="tablewrap"><table><thead><tr><th>State or message</th><th>Producer / owner</th><th>Use</th></tr></thead><tbody><tr><td><code>utt, pre, speech_ms, silence_ms</code></td><td>SophonBuffer</td><td>Current utterance buffering and scheduling</td></tr><tr><td><code>gen, spec_id, spec_gen</code></td><td>Duplex controller</td><td>Invalidate stale checks/drafts</td></tr><tr><td><code>last_pb, max_pf</code></td><td>Turn classifier consumer</td><td>Backchannel/finish decision; not default public metadata</td></tr><tr><td><code>history, last_said, last_play, cut</code></td><td>Duplex controller</td><td>Audio/text context; approximate playback-aware recovery</td></tr><tr><td><code>heard, asr_tasks, pending_outputs</code></td><td>RealtimeSession</td><td>Auxiliary transcript and tool-result state</td></tr><tr><td><code>dialog, actions, fails</code></td><td>BackOffice</td><td>Text reasoning context and lookup-failure policy</td></tr></tbody></table></div><p>Default native history bounds in the inspected Tag code are eight entries and 120 seconds of user-audio duration (with at least one entry retained). This is not a durable business state store. Generated output, gateway emission and actual client playback are separate milestones; engine truncation uses timing estimates unless independently backed by client playback evidence.</p><p class="sources">Evidence: <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L92-L93" target="_blank" rel="noopener">D:92–93</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L232-L279" target="_blank" rel="noopener">D:232–279</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L748-L756" target="_blank" rel="noopener">D:748–756</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L808-L895" target="_blank" rel="noopener">D:808–895</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L989-L1021" target="_blank" rel="noopener">D:989–1021</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/proc.py#L119-L149" target="_blank" rel="noopener">P:119–149</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py#L438-L452" target="_blank" rel="noopener">R:438–452</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/backend.py#L114-L129" target="_blank" rel="noopener">O:114–129</a></p><div class="note"><b>For Mario:</b> store observed transcripts, tool results and relevant spoken history with provenance; keep internal counters in control logic, not in the business LLM prompt. Do not invent emotion, emphasis or a semantic turn event just because the model has those capabilities.</div></section><section id="direct"><header><div class="num">04</div><div><h2>Native skill / tool calling</h2><p>Function proposals are not executable skills</p></div></header><figure><figcaption><b>03 / Direct function calling (Realtime face)</b><span>Client mode, with optional BackOffice disabled. Tool execution is outside the model and outside this gateway.</span></figcaption><div class="diagram"><svg role="img" aria-label="03 / Direct function calling (Realtime face)" width="343pt" height="991pt"
+ viewBox="0.00 0.00 342.92 990.92" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="direct-graph0" class="graph" transform="scale(1 1) rotate(0) translate(12.96 977.96)">
+<title>G</title>
+<!-- config -->
+<g id="direct-node1" class="node">
+<title>config</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M174.5,-965C174.5,-965 56.5,-965 56.5,-965 50.5,-965 44.5,-959 44.5,-953 44.5,-953 44.5,-933 44.5,-933 44.5,-927 50.5,-921 56.5,-921 56.5,-921 174.5,-921 174.5,-921 180.5,-921 186.5,-927 186.5,-933 186.5,-933 186.5,-953 186.5,-953 186.5,-959 180.5,-965 174.5,-965"/>
+<text text-anchor="middle" x="115.5" y="-946.4" font-family="Arial" font-size="12.00" fill="#18374a">Client session.update</text>
+<text text-anchor="middle" x="115.5" y="-933.4" font-family="Arial" font-size="12.00" fill="#18374a">instructions + tools</text>
+</g>
+<!-- prompt -->
+<g id="direct-node2" class="node">
+<title>prompt</title>
+<path fill="#e5f2f6" stroke="#408ba7" stroke-width="1.4" d="M212.5,-884C212.5,-884 18.5,-884 18.5,-884 12.5,-884 6.5,-878 6.5,-872 6.5,-872 6.5,-852 6.5,-852 6.5,-846 12.5,-840 18.5,-840 18.5,-840 212.5,-840 212.5,-840 218.5,-840 224.5,-846 224.5,-852 224.5,-852 224.5,-872 224.5,-872 224.5,-878 218.5,-884 212.5,-884"/>
+<text text-anchor="middle" x="115.5" y="-865.4" font-family="Arial" font-size="12.00" fill="#18374a">Plugin prompt construction</text>
+<text text-anchor="middle" x="115.5" y="-852.4" font-family="Arial" font-size="12.00" fill="#18374a">normalized schemas + audio history</text>
+</g>
+<!-- config&#45;&gt;prompt -->
+<g id="direct-edge1" class="edge">
+<title>config&#45;&gt;prompt</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M115.5,-920.83C115.5,-911.97 115.5,-901.54 115.5,-891.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="118.13,-891.73 115.5,-884.23 112.88,-891.73 118.13,-891.73"/>
+</g>
+<!-- gen -->
+<g id="direct-node3" class="node">
+<title>gen</title>
+<path fill="#e5f2f6" stroke="#408ba7" stroke-width="1.4" d="M201,-803C201,-803 30,-803 30,-803 24,-803 18,-797 18,-791 18,-791 18,-771 18,-771 18,-765 24,-759 30,-759 30,-759 201,-759 201,-759 207,-759 213,-765 213,-771 213,-771 213,-791 213,-791 213,-797 207,-803 201,-803"/>
+<text text-anchor="middle" x="115.5" y="-784.4" font-family="Arial" font-size="12.00" fill="#18374a">Thinker output</text>
+<text text-anchor="middle" x="115.5" y="-771.4" font-family="Arial" font-size="12.00" fill="#18374a">spoken lead&#45;in + tool call JSON</text>
+</g>
+<!-- prompt&#45;&gt;gen -->
+<g id="direct-edge2" class="edge">
+<title>prompt&#45;&gt;gen</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M115.5,-839.83C115.5,-830.97 115.5,-820.54 115.5,-810.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="118.13,-810.73 115.5,-803.23 112.88,-810.73 118.13,-810.73"/>
+</g>
+<!-- split -->
+<g id="direct-node4" class="node">
+<title>split</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M175,-722C175,-722 56,-722 56,-722 50,-722 44,-716 44,-710 44,-710 44,-690 44,-690 44,-684 50,-678 56,-678 56,-678 175,-678 175,-678 181,-678 187,-684 187,-690 187,-690 187,-710 187,-710 187,-716 181,-722 175,-722"/>
+<text text-anchor="middle" x="115.5" y="-703.4" font-family="Arial" font-size="12.00" fill="#18374a">tools.py / proc.py</text>
+<text text-anchor="middle" x="115.5" y="-690.4" font-family="Arial" font-size="12.00" fill="#18374a">separate text from call</text>
+</g>
+<!-- gen&#45;&gt;split -->
+<g id="direct-edge3" class="edge">
+<title>gen&#45;&gt;split</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M115.5,-758.83C115.5,-749.97 115.5,-739.54 115.5,-729.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="118.13,-729.73 115.5,-722.23 112.88,-729.73 118.13,-729.73"/>
+</g>
+<!-- audio -->
+<g id="direct-node5" class="node">
+<title>audio</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M93,-631C93,-631 12,-631 12,-631 6,-631 0,-625 0,-619 0,-619 0,-599 0,-599 0,-593 6,-587 12,-587 12,-587 93,-587 93,-587 99,-587 105,-593 105,-599 105,-599 105,-619 105,-619 105,-625 99,-631 93,-631"/>
+<text text-anchor="middle" x="52.5" y="-612.4" font-family="Arial" font-size="12.00" fill="#18374a">Talker</text>
+<text text-anchor="middle" x="52.5" y="-599.4" font-family="Arial" font-size="12.00" fill="#18374a">lead&#45;in speech</text>
+</g>
+<!-- split&#45;&gt;audio -->
+<g id="direct-edge4" class="edge">
+<title>split&#45;&gt;audio</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M99.1,-677.67C92.09,-668.57 85.5,-660 85.5,-660 85.5,-660 78.37,-649.2 70.74,-637.64"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="72.82,-636.02 66.49,-631.2 68.44,-638.91 72.82,-636.02"/>
+<text text-anchor="middle" x="117.5" y="-652" font-family="Arial" font-size="10.00" fill="#39566a">spoken tokens</text>
+</g>
+<!-- announce -->
+<g id="direct-node6" class="node">
+<title>announce</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M286,-631C286,-631 141,-631 141,-631 135,-631 129,-625 129,-619 129,-619 129,-599 129,-599 129,-593 135,-587 141,-587 141,-587 286,-587 286,-587 292,-587 298,-593 298,-599 298,-599 298,-619 298,-619 298,-625 292,-631 286,-631"/>
+<text text-anchor="middle" x="213.5" y="-612.4" font-family="Arial" font-size="12.00" fill="#18374a">_announce → Bridge.push</text>
+<text text-anchor="middle" x="213.5" y="-599.4" font-family="Arial" font-size="12.00" fill="#18374a">call_id / name / arguments</text>
+</g>
+<!-- split&#45;&gt;announce -->
+<g id="direct-edge5" class="edge">
+<title>split&#45;&gt;announce</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M138.72,-677.91C152.42,-665.47 169.86,-649.63 184.46,-636.38"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="186.32,-638.23 190.1,-631.25 182.79,-634.35 186.32,-638.23"/>
+<text text-anchor="middle" x="199" y="-652" font-family="Arial" font-size="10.00" fill="#39566a">call metadata</text>
+</g>
+<!-- poll -->
+<g id="direct-node7" class="node">
+<title>poll</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M305,-540C305,-540 122,-540 122,-540 116,-540 110,-534 110,-528 110,-528 110,-508 110,-508 110,-502 116,-496 122,-496 122,-496 305,-496 305,-496 311,-496 317,-502 317,-508 317,-508 317,-528 317,-528 317,-534 311,-540 305,-540"/>
+<text text-anchor="middle" x="213.5" y="-521.4" font-family="Arial" font-size="12.00" fill="#18374a">Adapter._poll → queue</text>
+<text text-anchor="middle" x="213.5" y="-508.4" font-family="Arial" font-size="12.00" fill="#18374a">RealtimeSession._engine_events</text>
+</g>
+<!-- announce&#45;&gt;poll -->
+<g id="direct-edge6" class="edge">
+<title>announce&#45;&gt;poll</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M213.5,-586.91C213.5,-575.24 213.5,-560.58 213.5,-547.87"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="216.13,-547.75 213.5,-540.25 210.88,-547.75 216.13,-547.75"/>
+<text text-anchor="middle" x="246.5" y="-561" font-family="Arial" font-size="10.00" fill="#39566a">HTTP long poll</text>
+</g>
+<!-- guard -->
+<g id="direct-node8" class="node">
+<title>guard</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M289.5,-459C289.5,-459 137.5,-459 137.5,-459 131.5,-459 125.5,-453 125.5,-447 125.5,-447 125.5,-427 125.5,-427 125.5,-421 131.5,-415 137.5,-415 137.5,-415 289.5,-415 289.5,-415 295.5,-415 301.5,-421 301.5,-427 301.5,-427 301.5,-447 301.5,-447 301.5,-453 295.5,-459 289.5,-459"/>
+<text text-anchor="middle" x="213.5" y="-440.4" font-family="Arial" font-size="12.00" fill="#18374a">_guard → _call</text>
+<text text-anchor="middle" x="213.5" y="-427.4" font-family="Arial" font-size="12.00" fill="#18374a">heuristic check / emit events</text>
+</g>
+<!-- poll&#45;&gt;guard -->
+<g id="direct-edge7" class="edge">
+<title>poll&#45;&gt;guard</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M213.5,-495.83C213.5,-486.97 213.5,-476.54 213.5,-466.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="216.13,-466.73 213.5,-459.23 210.88,-466.73 216.13,-466.73"/>
+</g>
+<!-- executor -->
+<g id="direct-node9" class="node">
+<title>executor</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M289.5,-368C289.5,-368 137.5,-368 137.5,-368 131.5,-368 125.5,-362 125.5,-356 125.5,-356 125.5,-336 125.5,-336 125.5,-330 131.5,-324 137.5,-324 137.5,-324 289.5,-324 289.5,-324 295.5,-324 301.5,-330 301.5,-336 301.5,-336 301.5,-356 301.5,-356 301.5,-362 295.5,-368 289.5,-368"/>
+<text text-anchor="middle" x="213.5" y="-349.4" font-family="Arial" font-size="12.00" fill="#18374a">Client tool executor</text>
+<text text-anchor="middle" x="213.5" y="-336.4" font-family="Arial" font-size="12.00" fill="#18374a">validate → perform → return</text>
+</g>
+<!-- guard&#45;&gt;executor -->
+<g id="direct-edge8" class="edge">
+<title>guard&#45;&gt;executor</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M213.5,-414.91C213.5,-403.24 213.5,-388.58 213.5,-375.87"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="216.13,-375.75 213.5,-368.25 210.88,-375.75 216.13,-375.75"/>
+<text text-anchor="middle" x="254" y="-389" font-family="Arial" font-size="10.00" fill="#39566a">function args done</text>
+</g>
+<!-- out -->
+<g id="direct-node10" class="node">
+<title>out</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M270.5,-287C270.5,-287 156.5,-287 156.5,-287 150.5,-287 144.5,-281 144.5,-275 144.5,-275 144.5,-255 144.5,-255 144.5,-249 150.5,-243 156.5,-243 156.5,-243 270.5,-243 270.5,-243 276.5,-243 282.5,-249 282.5,-255 282.5,-255 282.5,-275 282.5,-275 282.5,-281 276.5,-287 270.5,-287"/>
+<text text-anchor="middle" x="213.5" y="-268.4" font-family="Arial" font-size="12.00" fill="#18374a">function_call_output</text>
+<text text-anchor="middle" x="213.5" y="-255.4" font-family="Arial" font-size="12.00" fill="#18374a">then response.create</text>
+</g>
+<!-- executor&#45;&gt;out -->
+<g id="direct-edge9" class="edge">
+<title>executor&#45;&gt;out</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M213.5,-323.83C213.5,-314.97 213.5,-304.54 213.5,-294.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="216.13,-294.73 213.5,-287.23 210.88,-294.73 216.13,-294.73"/>
+</g>
+<!-- result -->
+<g id="direct-node11" class="node">
+<title>result</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M278,-206C278,-206 149,-206 149,-206 143,-206 137,-200 137,-194 137,-194 137,-174 137,-174 137,-168 143,-162 149,-162 149,-162 278,-162 278,-162 284,-162 290,-168 290,-174 290,-174 290,-194 290,-194 290,-200 284,-206 278,-206"/>
+<text text-anchor="middle" x="213.5" y="-187.4" font-family="Arial" font-size="12.00" fill="#18374a">Adapter.tool_result</text>
+<text text-anchor="middle" x="213.5" y="-174.4" font-family="Arial" font-size="12.00" fill="#18374a">POST /bridge/key/result</text>
+</g>
+<!-- out&#45;&gt;result -->
+<g id="direct-edge10" class="edge">
+<title>out&#45;&gt;result</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M213.5,-242.83C213.5,-233.97 213.5,-223.54 213.5,-213.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="216.13,-213.73 213.5,-206.23 210.88,-213.73 216.13,-213.73"/>
+</g>
+<!-- follow -->
+<g id="direct-node12" class="node">
+<title>follow</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M297.5,-125C297.5,-125 129.5,-125 129.5,-125 123.5,-125 117.5,-119 117.5,-113 117.5,-113 117.5,-93 117.5,-93 117.5,-87 123.5,-81 129.5,-81 129.5,-81 297.5,-81 297.5,-81 303.5,-81 309.5,-87 309.5,-93 309.5,-93 309.5,-113 309.5,-113 309.5,-119 303.5,-125 297.5,-125"/>
+<text text-anchor="middle" x="213.5" y="-106.4" font-family="Arial" font-size="12.00" fill="#18374a">_bridge_result → tool_followup</text>
+<text text-anchor="middle" x="213.5" y="-93.4" font-family="Arial" font-size="12.00" fill="#18374a">rebuild prompt from history</text>
+</g>
+<!-- result&#45;&gt;follow -->
+<g id="direct-edge11" class="edge">
+<title>result&#45;&gt;follow</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M213.5,-161.83C213.5,-152.97 213.5,-142.54 213.5,-132.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="216.13,-132.73 213.5,-125.23 210.88,-132.73 216.13,-132.73"/>
+</g>
+<!-- say -->
+<g id="direct-node13" class="node">
+<title>say</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M263.5,-44C263.5,-44 163.5,-44 163.5,-44 157.5,-44 151.5,-38 151.5,-32 151.5,-32 151.5,-12 151.5,-12 151.5,-6 157.5,0 163.5,0 163.5,0 263.5,0 263.5,0 269.5,0 275.5,-6 275.5,-12 275.5,-12 275.5,-32 275.5,-32 275.5,-38 269.5,-44 263.5,-44"/>
+<text text-anchor="middle" x="213.5" y="-25.4" font-family="Arial" font-size="12.00" fill="#18374a">Thinker → speech</text>
+<text text-anchor="middle" x="213.5" y="-12.4" font-family="Arial" font-size="12.00" fill="#18374a">grounded reply</text>
+</g>
+<!-- follow&#45;&gt;say -->
+<g id="direct-edge12" class="edge">
+<title>follow&#45;&gt;say</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M213.5,-80.83C213.5,-71.97 213.5,-61.54 213.5,-51.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="216.13,-51.73 213.5,-44.23 210.88,-51.73 216.13,-51.73"/>
+</g>
+</g>
+</svg>
+</div></figure><p>The tool subsystem is a compact protocol implementation. It accepts function schemas, adapts them to the model’s chat template, parses generated tool-call JSON, filters control syntax from speech, and publishes call events. Tool calls can be generated before the lead-in has finished playing. It is the client, not the neural model, that implements real service behavior.</p><div class="tablewrap"><table><thead><tr><th>Mode</th><th>Actual behavior</th><th>Do not confuse with</th></tr></thead><tbody><tr><td><code>tool_mode=mock</code></td><td>Local canned responses; max three mock rounds; missing mock can return a generic mock success</td><td>Production operations</td></tr><tr><td><code>tool_mode=client</code></td><td>Publish parsed calls; await externally supplied results</td><td>A built-in executor, strict schema validator, or permission engine</td></tr><tr><td>Tool bridge</td><td>Local HTTP service, per-key list and condition variable; long-poll drains pending events</td><td>Durable message broker / exactly-once delivery</td></tr><tr><td>Tool follow-up</td><td>Add result context, schedule new reply when input permits</td><td>A persisted task graph or transaction manager</td></tr></tbody></table></div><p class="sources">Evidence: <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/tools.py#L13-L106" target="_blank" rel="noopener">T:13–106</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L1022-L1077" target="_blank" rel="noopener">D:1022–1077</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/bridge.py#L38-L75" target="_blank" rel="noopener">B:38–75</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/adapters.py#L69-L84" target="_blank" rel="noopener">A:69–84</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/adapters.py#L116-L140" target="_blank" rel="noopener">A:116–140</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py#L544-L562" target="_blank" rel="noopener">R:544–562</a></p><h3>4.1 Protocol example (illustrative values)</h3><p>Register a narrow function on the Realtime gateway. This is a proposed car-sales tool, not an upstream built-in skill.</p><pre><code>{
+  &quot;type&quot;: &quot;session.update&quot;,
+  &quot;session&quot;: {
+    &quot;tools&quot;: [{&quot;type&quot;:&quot;function&quot;, &quot;name&quot;:&quot;lookup_inventory&quot;,
+      &quot;description&quot;:&quot;Read inventory for an exact vehicle and store&quot;,
+      &quot;parameters&quot;:{&quot;type&quot;:&quot;object&quot;, &quot;properties&quot;:{
+        &quot;vehicle_ref&quot;:{&quot;type&quot;:&quot;string&quot;}, &quot;color&quot;:{&quot;type&quot;:&quot;string&quot;}},
+        &quot;required&quot;:[&quot;vehicle_ref&quot;,&quot;color&quot;]}}]
+  }
+}</code></pre><p>Consume <code>response.function_call_arguments.done</code>, validate the final arguments and execute the real read-only tool. Return the result with the same call ID:</p><pre><code>{&quot;type&quot;:&quot;conversation.item.create&quot;,&quot;item&quot;:{
+  &quot;type&quot;:&quot;function_call_output&quot;,&quot;call_id&quot;:&quot;call_demo_1&quot;,
+  &quot;output&quot;:&quot;{\&quot;status\&quot;:\&quot;ok\&quot;,\&quot;available\&quot;:2,\&quot;fixture\&quot;:true}&quot;
+}}
+{&quot;type&quot;:&quot;response.create&quot;}</code></pre><p>In the inspected gateway, direct outputs are buffered until the subsequent <code>response.create</code> sends them to the engine; only the final output in that batch requests speech. When a call belongs to BackOffice, its result instead resolves the corresponding future. The sample inventory is fictional.</p><p class="sources">Evidence: <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py#L284-L318" target="_blank" rel="noopener">R:284–318</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py#L544-L559" target="_blank" rel="noopener">R:544–559</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/adapters.py#L77-L84" target="_blank" rel="noopener">A:77–84</a></p></section><section id="delegation"><header><div class="num">05</div><div><h2>GPT-Live delegation</h2><p>A different facade over the same audio engine</p></div></header><figure><figcaption><b>04 / GPT-Live client delegation</b><span>Asynchronous external delegation; progress and final business results are not the same event.</span></figcaption><div class="diagram"><svg role="img" aria-label="04 / GPT-Live client delegation" width="296pt" height="718pt"
+ viewBox="0.00 0.00 296.42 717.92" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="delegation-graph0" class="graph" transform="scale(1 1) rotate(0) translate(12.96 704.96)">
+<title>G</title>
+<!-- front -->
+<g id="delegation-node1" class="node">
+<title>front</title>
+<path fill="#e5f2f6" stroke="#408ba7" stroke-width="1.4" d="M193,-692C193,-692 36,-692 36,-692 30,-692 24,-686 24,-680 24,-680 24,-660 24,-660 24,-654 30,-648 36,-648 36,-648 193,-648 193,-648 199,-648 205,-654 205,-660 205,-660 205,-680 205,-680 205,-686 199,-692 193,-692"/>
+<text text-anchor="middle" x="114.5" y="-673.4" font-family="Arial" font-size="12.00" fill="#18374a">Sophon Thinker</text>
+<text text-anchor="middle" x="114.5" y="-660.4" font-family="Arial" font-size="12.00" fill="#18374a">short lead&#45;in + delegate(task)</text>
+</g>
+<!-- gate -->
+<g id="delegation-node2" class="node">
+<title>gate</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M205.5,-611C205.5,-611 23.5,-611 23.5,-611 17.5,-611 11.5,-605 11.5,-599 11.5,-599 11.5,-579 11.5,-579 11.5,-573 17.5,-567 23.5,-567 23.5,-567 205.5,-567 205.5,-567 211.5,-567 217.5,-573 217.5,-579 217.5,-579 217.5,-599 217.5,-599 217.5,-605 211.5,-611 205.5,-611"/>
+<text text-anchor="middle" x="114.5" y="-592.4" font-family="Arial" font-size="12.00" fill="#18374a">Gateway._delegate</text>
+<text text-anchor="middle" x="114.5" y="-579.4" font-family="Arial" font-size="12.00" fill="#18374a">cut user segment / await ASR ≤3s</text>
+</g>
+<!-- front&#45;&gt;gate -->
+<g id="delegation-edge1" class="edge">
+<title>front&#45;&gt;gate</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M114.5,-647.83C114.5,-638.97 114.5,-628.54 114.5,-618.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="117.13,-618.73 114.5,-611.23 111.88,-618.73 117.13,-618.73"/>
+</g>
+<!-- voice -->
+<g id="delegation-node9" class="node">
+<title>voice</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M197,-44C197,-44 32,-44 32,-44 26,-44 20,-38 20,-32 20,-32 20,-12 20,-12 20,-6 26,0 32,0 32,0 197,0 197,0 203,0 209,-6 209,-12 209,-12 209,-32 209,-32 209,-38 203,-44 197,-44"/>
+<text text-anchor="middle" x="114.5" y="-25.4" font-family="Arial" font-size="12.00" fill="#18374a">Voice output</text>
+<text text-anchor="middle" x="114.5" y="-12.4" font-family="Arial" font-size="12.00" fill="#18374a">continuous listening preserved</text>
+</g>
+<!-- front&#45;&gt;voice -->
+<g id="delegation-edge9" class="edge">
+<title>front&#45;&gt;voice</title>
+<path fill="none" stroke="#329b83" stroke-width="1.25" stroke-dasharray="5,2" d="M156.34,-647.9C189.22,-631.31 229.5,-611 229.5,-611 229.5,-611 241.5,-368 241.5,-368 241.5,-368 241.5,-324 241.5,-324 241.5,-324 236.5,-243 236.5,-243 236.5,-243 218.5,-81 218.5,-81 218.5,-81 187.28,-63.59 159.05,-47.85"/>
+<polygon fill="#329b83" stroke="#329b83" stroke-width="1.25" points="160.17,-45.46 152.34,-44.1 157.61,-50.05 160.17,-45.46"/>
+<text text-anchor="middle" x="256" y="-343.5" font-family="Arial" font-size="10.00" fill="#39566a">lead&#45;in</text>
+</g>
+<!-- event -->
+<g id="delegation-node3" class="node">
+<title>event</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M187.5,-530C187.5,-530 41.5,-530 41.5,-530 35.5,-530 29.5,-524 29.5,-518 29.5,-518 29.5,-498 29.5,-498 29.5,-492 35.5,-486 41.5,-486 41.5,-486 187.5,-486 187.5,-486 193.5,-486 199.5,-492 199.5,-498 199.5,-498 199.5,-518 199.5,-518 199.5,-524 193.5,-530 187.5,-530"/>
+<text text-anchor="middle" x="114.5" y="-511.4" font-family="Arial" font-size="12.00" fill="#18374a">session.delegation.created</text>
+<text text-anchor="middle" x="114.5" y="-498.4" font-family="Arial" font-size="12.00" fill="#18374a">delegation_id ↔ call_id</text>
+</g>
+<!-- gate&#45;&gt;event -->
+<g id="delegation-edge2" class="edge">
+<title>gate&#45;&gt;event</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M114.5,-566.83C114.5,-557.97 114.5,-547.54 114.5,-537.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="117.13,-537.73 114.5,-530.23 111.88,-537.73 117.13,-537.73"/>
+</g>
+<!-- backend -->
+<g id="delegation-node4" class="node">
+<title>backend</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M195.5,-449C195.5,-449 33.5,-449 33.5,-449 27.5,-449 21.5,-443 21.5,-437 21.5,-437 21.5,-417 21.5,-417 21.5,-411 27.5,-405 33.5,-405 33.5,-405 195.5,-405 195.5,-405 201.5,-405 207.5,-411 207.5,-417 207.5,-417 207.5,-437 207.5,-437 207.5,-443 201.5,-449 195.5,-449"/>
+<text text-anchor="middle" x="114.5" y="-430.4" font-family="Arial" font-size="12.00" fill="#18374a">External backend (e.g., Mario)</text>
+<text text-anchor="middle" x="114.5" y="-417.4" font-family="Arial" font-size="12.00" fill="#18374a">reason / retrieve / execute</text>
+</g>
+<!-- event&#45;&gt;backend -->
+<g id="delegation-edge3" class="edge">
+<title>event&#45;&gt;backend</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M114.5,-485.83C114.5,-476.97 114.5,-466.54 114.5,-456.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="117.13,-456.73 114.5,-449.23 111.88,-456.73 117.13,-456.73"/>
+</g>
+<!-- chunks -->
+<g id="delegation-node5" class="node">
+<title>chunks</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M217,-368C217,-368 12,-368 12,-368 6,-368 0,-362 0,-356 0,-356 0,-336 0,-336 0,-330 6,-324 12,-324 12,-324 217,-324 217,-324 223,-324 229,-330 229,-336 229,-336 229,-356 229,-356 229,-362 223,-368 217,-368"/>
+<text text-anchor="middle" x="114.5" y="-349.4" font-family="Arial" font-size="12.00" fill="#18374a">commentary.append / thinking.append</text>
+<text text-anchor="middle" x="114.5" y="-336.4" font-family="Arial" font-size="12.00" fill="#18374a">content + delegation_id</text>
+</g>
+<!-- backend&#45;&gt;chunks -->
+<g id="delegation-edge4" class="edge">
+<title>backend&#45;&gt;chunks</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M114.5,-404.83C114.5,-395.97 114.5,-385.54 114.5,-375.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="117.13,-375.73 114.5,-368.23 111.88,-375.73 117.13,-375.73"/>
+</g>
+<!-- merge -->
+<g id="delegation-node6" class="node">
+<title>merge</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M213,-287C213,-287 16,-287 16,-287 10,-287 4,-281 4,-275 4,-275 4,-255 4,-255 4,-249 10,-243 16,-243 16,-243 213,-243 213,-243 219,-243 225,-249 225,-255 225,-255 225,-275 225,-275 225,-281 219,-287 213,-287"/>
+<text text-anchor="middle" x="114.5" y="-268.4" font-family="Arial" font-size="12.00" fill="#18374a">Gateway timers + chunk aggregation</text>
+<text text-anchor="middle" x="114.5" y="-255.4" font-family="Arial" font-size="12.00" fill="#18374a">model mode or rules mode</text>
+</g>
+<!-- chunks&#45;&gt;merge -->
+<g id="delegation-edge5" class="edge">
+<title>chunks&#45;&gt;merge</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M114.5,-323.83C114.5,-314.97 114.5,-304.54 114.5,-294.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="117.13,-294.73 114.5,-287.23 111.88,-294.73 117.13,-294.73"/>
+</g>
+<!-- result -->
+<g id="delegation-node7" class="node">
+<title>result</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M165.5,-206C165.5,-206 63.5,-206 63.5,-206 57.5,-206 51.5,-200 51.5,-194 51.5,-194 51.5,-174 51.5,-174 51.5,-168 57.5,-162 63.5,-162 63.5,-162 165.5,-162 165.5,-162 171.5,-162 177.5,-168 177.5,-174 177.5,-174 177.5,-194 177.5,-194 177.5,-200 171.5,-206 165.5,-206"/>
+<text text-anchor="middle" x="114.5" y="-187.4" font-family="Arial" font-size="12.00" fill="#18374a">Adapter.tool_result</text>
+<text text-anchor="middle" x="114.5" y="-174.4" font-family="Arial" font-size="12.00" fill="#18374a">context update</text>
+</g>
+<!-- merge&#45;&gt;result -->
+<g id="delegation-edge6" class="edge">
+<title>merge&#45;&gt;result</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M114.5,-242.83C114.5,-233.97 114.5,-223.54 114.5,-213.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="117.13,-213.73 114.5,-206.23 111.88,-213.73 117.13,-213.73"/>
+</g>
+<!-- response -->
+<g id="delegation-node8" class="node">
+<title>response</title>
+<path fill="#e5f2f6" stroke="#408ba7" stroke-width="1.4" d="M194,-125C194,-125 35,-125 35,-125 29,-125 23,-119 23,-113 23,-113 23,-93 23,-93 23,-87 29,-81 35,-81 35,-81 194,-81 194,-81 200,-81 206,-87 206,-93 206,-93 206,-113 206,-113 206,-119 200,-125 194,-125"/>
+<text text-anchor="middle" x="114.5" y="-106.4" font-family="Arial" font-size="12.00" fill="#18374a">Sophon Thinker</text>
+<text text-anchor="middle" x="114.5" y="-93.4" font-family="Arial" font-size="12.00" fill="#18374a">answer / progress / silent wait</text>
+</g>
+<!-- result&#45;&gt;response -->
+<g id="delegation-edge7" class="edge">
+<title>result&#45;&gt;response</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M114.5,-161.83C114.5,-152.97 114.5,-142.54 114.5,-132.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="117.13,-132.73 114.5,-125.23 111.88,-132.73 117.13,-132.73"/>
+</g>
+<!-- response&#45;&gt;voice -->
+<g id="delegation-edge8" class="edge">
+<title>response&#45;&gt;voice</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M114.5,-80.83C114.5,-71.97 114.5,-61.54 114.5,-51.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="117.13,-51.73 114.5,-44.23 111.88,-51.73 117.13,-51.73"/>
+</g>
+</g>
+</svg>
+</div></figure><p>Here the voice model receives a generic <code>delegate(task)</code> tool. The gateway publishes the request for an external client, then accepts commentary and thinking messages keyed to the delegation. It supports model-driven update handling (default) and an optional rule-based mode. The default quiet-window aggregation is 0.6 s and the model-mode initial idle update is 7 s, unless configuration overrides them.</p><pre><code>// Gateway -&gt; client (illustrative)
+{&quot;type&quot;:&quot;session.delegation.created&quot;,&quot;offset_ms&quot;:4200,
+ &quot;delegation&quot;:{&quot;id&quot;:&quot;item_demo_1&quot;,&quot;type&quot;:&quot;delegation&quot;,
+ &quot;target&quot;:&quot;client&quot;,&quot;task&quot;:&quot;查询白色现车库存&quot;}}
+// Client -&gt; gateway
+{&quot;type&quot;:&quot;session.commentary.append&quot;,&quot;delegation_id&quot;:&quot;item_demo_1&quot;,
+ &quot;content&quot;:&quot;查询成功，白色现车 2 辆（模拟数据）&quot;}</code></pre><p>The gateway can pass progress/context to the model and let it choose whether to speak or remain silent. A commentary acknowledgment is an acceptance event, not a tool success or playback receipt. The caller must not send results for an obsolete business request merely because a delegation ID still exists.</p><p class="sources">Evidence: <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/gateway.py#L29-L65" target="_blank" rel="noopener">L:29–65</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/gateway.py#L235-L292" target="_blank" rel="noopener">L:235–292</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/gateway.py#L478-L492" target="_blank" rel="noopener">L:478–492</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/tools.py#L26-L43" target="_blank" rel="noopener">T:26–43</a></p></section><section id="backoffice"><header><div class="num">06</div><div><h2>Optional BackOffice: the mini agent Harness</h2><p>A real bounded reasoning loop, not a full business workflow engine</p></div></header><figure><figcaption><b>05 / Optional BackOffice reasoning loop</b><span>This is the existing text-agent loop most analogous to Mario. Do not stack another equivalent planner by default.</span></figcaption><div class="diagram"><svg role="img" aria-label="05 / Optional BackOffice reasoning loop" width="456pt" height="584pt"
+ viewBox="0.00 0.00 455.92 583.92" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="backoffice-graph0" class="graph" transform="scale(1 1) rotate(0) translate(12.96 570.96)">
+<title>G</title>
+<!-- delegate -->
+<g id="backoffice-node1" class="node">
+<title>delegate</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M281,-558C281,-558 103,-558 103,-558 97,-558 91,-552 91,-546 91,-546 91,-526 91,-526 91,-520 97,-514 103,-514 103,-514 281,-514 281,-514 287,-514 293,-520 293,-526 293,-526 293,-546 293,-546 293,-552 287,-558 281,-558"/>
+<text text-anchor="middle" x="192" y="-539.4" font-family="Arial" font-size="12.00" fill="#18374a">RealtimeSession._delegate</text>
+<text text-anchor="middle" x="192" y="-526.4" font-family="Arial" font-size="12.00" fill="#18374a">Sophon task + recent text context</text>
+</g>
+<!-- compile -->
+<g id="backoffice-node2" class="node">
+<title>compile</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M283.5,-477C283.5,-477 100.5,-477 100.5,-477 94.5,-477 88.5,-471 88.5,-465 88.5,-465 88.5,-445 88.5,-445 88.5,-439 94.5,-433 100.5,-433 100.5,-433 283.5,-433 283.5,-433 289.5,-433 295.5,-439 295.5,-445 295.5,-445 295.5,-465 295.5,-465 295.5,-471 289.5,-477 283.5,-477"/>
+<text text-anchor="middle" x="192" y="-458.4" font-family="Arial" font-size="12.00" fill="#18374a">BackOffice.run</text>
+<text text-anchor="middle" x="192" y="-445.4" font-family="Arial" font-size="12.00" fill="#18374a">relay or ASR + actions + schemas</text>
+</g>
+<!-- delegate&#45;&gt;compile -->
+<g id="backoffice-edge1" class="edge">
+<title>delegate&#45;&gt;compile</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M192,-513.83C192,-504.97 192,-494.54 192,-484.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="194.63,-484.73 192,-477.23 189.38,-484.73 194.63,-484.73"/>
+</g>
+<!-- llm -->
+<g id="backoffice-node3" class="node">
+<title>llm</title>
+<path fill="#e5f2f6" stroke="#408ba7" stroke-width="1.4" d="M268.5,-396C268.5,-396 115.5,-396 115.5,-396 109.5,-396 103.5,-390 103.5,-384 103.5,-384 103.5,-364 103.5,-364 103.5,-358 109.5,-352 115.5,-352 115.5,-352 268.5,-352 268.5,-352 274.5,-352 280.5,-358 280.5,-364 280.5,-364 280.5,-384 280.5,-384 280.5,-390 274.5,-396 268.5,-396"/>
+<text text-anchor="middle" x="192" y="-377.4" font-family="Arial" font-size="12.00" fill="#18374a">OpenAI&#45;compatible text LLM</text>
+<text text-anchor="middle" x="192" y="-364.4" font-family="Arial" font-size="12.00" fill="#18374a">next reasoning step</text>
+</g>
+<!-- compile&#45;&gt;llm -->
+<g id="backoffice-edge2" class="edge">
+<title>compile&#45;&gt;llm</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M192,-432.83C192,-423.97 192,-413.54 192,-403.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="194.63,-403.73 192,-396.23 189.38,-403.73 194.63,-403.73"/>
+</g>
+<!-- choice -->
+<g id="backoffice-node4" class="node">
+<title>choice</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M180.74,-310.85C180.74,-310.85 119.26,-288.15 119.26,-288.15 113.63,-286.08 113.63,-281.92 119.26,-279.85 119.26,-279.85 180.74,-257.15 180.74,-257.15 186.37,-255.08 197.63,-255.08 203.26,-257.15 203.26,-257.15 264.74,-279.85 264.74,-279.85 270.37,-281.92 270.37,-286.08 264.74,-288.15 264.74,-288.15 203.26,-310.85 203.26,-310.85 197.63,-312.92 186.37,-312.92 180.74,-310.85"/>
+<text text-anchor="middle" x="192" y="-280.9" font-family="Arial" font-size="12.00" fill="#18374a">Tool calls?</text>
+</g>
+<!-- llm&#45;&gt;choice -->
+<g id="backoffice-edge3" class="edge">
+<title>llm&#45;&gt;choice</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M192,-351.7C192,-343.03 192,-332.74 192,-322.87"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="194.63,-322.58 192,-315.08 189.38,-322.58 194.63,-322.58"/>
+</g>
+<!-- tool -->
+<g id="backoffice-node5" class="node">
+<title>tool</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M158,-206C158,-206 30,-206 30,-206 24,-206 18,-200 18,-194 18,-194 18,-174 18,-174 18,-168 24,-162 30,-162 30,-162 158,-162 158,-162 164,-162 170,-168 170,-174 170,-174 170,-194 170,-194 170,-200 164,-206 158,-206"/>
+<text text-anchor="middle" x="94" y="-187.4" font-family="Arial" font-size="12.00" fill="#18374a">call_tool → _call</text>
+<text text-anchor="middle" x="94" y="-174.4" font-family="Arial" font-size="12.00" fill="#18374a">client executes real tool</text>
+</g>
+<!-- choice&#45;&gt;tool -->
+<g id="backoffice-edge4" class="edge">
+<title>choice&#45;&gt;tool</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M169.76,-260.76C155.18,-246.18 136.03,-227.03 120.63,-211.63"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="122.3,-209.59 115.14,-206.14 118.59,-213.3 122.3,-209.59"/>
+<text text-anchor="middle" x="151" y="-227" font-family="Arial" font-size="10.00" fill="#39566a">yes</text>
+</g>
+<!-- final -->
+<g id="backoffice-node8" class="node">
+<title>final</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M378,-202C378,-202 206,-202 206,-202 200,-202 194,-196 194,-190 194,-190 194,-178 194,-178 194,-172 200,-166 206,-166 206,-166 378,-166 378,-166 384,-166 390,-172 390,-178 390,-178 390,-190 390,-190 390,-196 384,-202 378,-202"/>
+<text text-anchor="middle" x="292" y="-180.9" font-family="Arial" font-size="12.00" fill="#18374a">Final answer / bounded fallback</text>
+</g>
+<!-- choice&#45;&gt;final -->
+<g id="backoffice-edge8" class="edge">
+<title>choice&#45;&gt;final</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M214.69,-260.76C230.81,-244.97 252.38,-223.83 268.64,-207.89"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="270.86,-209.4 274.38,-202.27 267.18,-205.65 270.86,-209.4"/>
+<text text-anchor="middle" x="256.5" y="-227" font-family="Arial" font-size="10.00" fill="#39566a">no</text>
+</g>
+<!-- future -->
+<g id="backoffice-node6" class="node">
+<title>future</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M160,-125C160,-125 28,-125 28,-125 22,-125 16,-119 16,-113 16,-113 16,-93 16,-93 16,-87 22,-81 28,-81 28,-81 160,-81 160,-81 166,-81 172,-87 172,-93 172,-93 172,-113 172,-113 172,-119 166,-125 160,-125"/>
+<text text-anchor="middle" x="94" y="-106.4" font-family="Arial" font-size="12.00" fill="#18374a">bk_wait[call_id] Future</text>
+<text text-anchor="middle" x="94" y="-93.4" font-family="Arial" font-size="12.00" fill="#18374a">await result (90s default)</text>
+</g>
+<!-- tool&#45;&gt;future -->
+<g id="backoffice-edge5" class="edge">
+<title>tool&#45;&gt;future</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M94,-161.83C94,-152.97 94,-142.54 94,-132.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="96.63,-132.73 94,-125.23 91.38,-132.73 96.63,-132.73"/>
+</g>
+<!-- record -->
+<g id="backoffice-node7" class="node">
+<title>record</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M176,-44C176,-44 12,-44 12,-44 6,-44 0,-38 0,-32 0,-32 0,-12 0,-12 0,-6 6,0 12,0 12,0 176,0 176,0 182,0 188,-6 188,-12 188,-12 188,-32 188,-32 188,-38 182,-44 176,-44"/>
+<text text-anchor="middle" x="94" y="-25.4" font-family="Arial" font-size="12.00" fill="#18374a">Append tool result + action log</text>
+<text text-anchor="middle" x="94" y="-12.4" font-family="Arial" font-size="12.00" fill="#18374a">next step (bounded)</text>
+</g>
+<!-- future&#45;&gt;record -->
+<g id="backoffice-edge6" class="edge">
+<title>future&#45;&gt;record</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M94,-80.83C94,-71.97 94,-61.54 94,-51.99"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="96.63,-51.73 94,-44.23 91.38,-51.73 96.63,-51.73"/>
+</g>
+<!-- record&#45;&gt;llm -->
+<g id="backoffice-edge7" class="edge">
+<title>record&#45;&gt;llm</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M188.31,-41.11C276.92,-58.13 396,-81 396,-81 396,-81 402,-162 402,-162 402,-162 402,-206 402,-206 402,-206 288,-315 288,-315 288,-315 259.43,-332.26 233.46,-347.95"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="231.99,-345.77 226.93,-351.9 234.71,-350.26 231.99,-345.77"/>
+<text text-anchor="middle" x="416" y="-181.5" font-family="Arial" font-size="10.00" fill="#39566a">repeat</text>
+</g>
+<!-- return -->
+<g id="backoffice-node9" class="node">
+<title>return</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M372.5,-125C372.5,-125 211.5,-125 211.5,-125 205.5,-125 199.5,-119 199.5,-113 199.5,-113 199.5,-93 199.5,-93 199.5,-87 205.5,-81 211.5,-81 211.5,-81 372.5,-81 372.5,-81 378.5,-81 384.5,-87 384.5,-93 384.5,-93 384.5,-113 384.5,-113 384.5,-119 378.5,-125 372.5,-125"/>
+<text text-anchor="middle" x="292" y="-106.4" font-family="Arial" font-size="12.00" fill="#18374a">Adapter.tool_result → Thinker</text>
+<text text-anchor="middle" x="292" y="-93.4" font-family="Arial" font-size="12.00" fill="#18374a">natural spoken response</text>
+</g>
+<!-- final&#45;&gt;return -->
+<g id="backoffice-edge9" class="edge">
+<title>final&#45;&gt;return</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M292,-165.86C292,-156.22 292,-143.93 292,-132.85"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="294.63,-132.55 292,-125.05 289.38,-132.55 294.63,-132.55"/>
+</g>
+</g>
+</svg>
+</div></figure><p>On the inspected Realtime face, setting <code>SOPHON_LIVE_BACKEND</code> enables a per-session BackOffice. The front model delegates; BackOffice uses a text LLM with the client’s tools. Its context can be configured to use relayed tasks and assistant history, or to include ASR. An asynchronous task handles delegation while the voice-event loop continues.</p><div class="tablewrap"><table><thead><tr><th>Control</th><th>Observed setting / implementation</th><th>What it means</th></tr></thead><tbody><tr><td>SOPHON_LIVE_BACKEND_INPUT</td><td>relay (default) or asr</td><td>Compare audio-native relay vs relay plus ASR</td></tr><tr><td>SOPHON_LIVE_BACKEND_STEPS</td><td>8 default</td><td>Maximum LLM iterations per BackOffice.run, not an overall session limit</td></tr><tr><td>Tool dispatch</td><td>Sequential await inside each tool-call list</td><td>No parallel workflow DAG demonstrated</td></tr><tr><td>Tool result wait</td><td>90 s per client call</td><td>Call-ID future; timeout text returned</td></tr><tr><td>LLM request attempts</td><td>up to 3</td><td>Retries the text model request, not guaranteed safe replay of external actions</td></tr><tr><td>HTTP client timeout</td><td>120 s; 600 s with thinking</td><td>Request-level configuration, not a total delegation deadline</td></tr><tr><td>Lookup failures</td><td>2 default for get_/find_/search_ names</td><td>Ask for clarification instead of continued guessing</td></tr><tr><td>Text context</td><td>last 60 dialog entries + last 30 action summaries</td><td>Bounded prompt history; not a CRM or durable audit journal</td></tr></tbody></table></div><h3>Harness analogy</h3><p>BackOffice.run is analogous to an agent’s reasoning–action–observation loop. It receives the task and available tools, asks the LLM what to do next, awaits tool results, appends observations, and repeats until a final answer or a bound. It is a strong reuse reference for Mario; it is not evidence that Mario’s scenario transitions or tool policies can be replaced by model weights.</p><p class="sources">Evidence: <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/backend.py#L16-L24" target="_blank" rel="noopener">O:16–24</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/backend.py#L114-L182" target="_blank" rel="noopener">O:114–182</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py#L181-L184" target="_blank" rel="noopener">R:181–184</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py#L563-L590" target="_blank" rel="noopener">R:563–590</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py#L634-L640" target="_blank" rel="noopener">R:634–640</a></p></section><section id="concurrency"><header><div class="num">07</div><div><h2>Concurrency, queues and timing</h2><p>Task scheduling at the service layer</p></div></header><div class="tablewrap"><table><thead><tr><th>Worker / state</th><th>Mechanism</th><th>Role and limits</th></tr></thead><tbody><tr><td>Gateway receive / send</td><td>asyncio WebSocket event handling</td><td>Client messages; no guarantee of ordered results from independent tasks</td></tr><tr><td>GPT-Live output pump</td><td><code>_pump()</code>, 100 ms frames</td><td>Continuous paced playback; silence if idle</td></tr><tr><td>Engine event pump</td><td><code>_engine_events()</code></td><td>Reads normalized adapter events; dispatches audio, text and calls</td></tr><tr><td>ASR</td><td><code>asyncio.to_thread</code> + ASR lock</td><td>Auxiliary transcription; may finish later than native response</td></tr><tr><td>Idle input feed</td><td>100 ms loop after 0.3 s without client audio</td><td>Provides silence so the engine can detect turns/follow-ups</td></tr><tr><td>Adapter</td><td><code>_recv()</code> and <code>_poll()</code> tasks, queue</td><td>WS data plus local HTTP tool events; poll wait 20 s / HTTP timeout 30 s</td></tr><tr><td>Tool bridge</td><td>ThreadingHTTPServer + Condition</td><td>Per-key in-memory queue; poll drains events</td></tr><tr><td>Turn classifier</td><td>Daemon thread; generation check</td><td>Reject obsolete classification decision</td></tr><tr><td>BackOffice</td><td>Async delegation task + Future per client call</td><td>Await external result without blocking audio-event consumption</td></tr><tr><td>Timers</td><td>call_later + async callbacks</td><td>Merge commentary, idle notice, response lifecycle; not durable scheduling</td></tr></tbody></table></div><p class="sources">Evidence: <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/gateway.py#L214-L234" target="_blank" rel="noopener">L:214–234</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/gateway.py#L243-L246" target="_blank" rel="noopener">L:243–246</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/gateway.py#L426-L473" target="_blank" rel="noopener">L:426–473</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/gateway.py#L494-L562" target="_blank" rel="noopener">L:494–562</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/adapters.py#L35-L54" target="_blank" rel="noopener">A:35–54</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/adapters.py#L85-L140" target="_blank" rel="noopener">A:85–140</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/bridge.py#L58-L75" target="_blank" rel="noopener">B:58–75</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L490-L514" target="_blank" rel="noopener">D:490–514</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py#L563-L590" target="_blank" rel="noopener">R:563–590</a></p><div class="note"><b>Performance measurement:</b> instrument audio end → semantic turn decision → first lead-in audio → tool publication → validated execution start/end → result accepted → first fact-bearing audio → playback completion. These timestamps are separate; measuring only first audio can conceal a slow business tool. Use monotonic clocks and correlated IDs, not assumptions about async scheduling.</div></section><section id="risks"><header><div class="num">08</div><div><h2>Source-level findings and risk hypotheses</h2><p>The most important gaps for a production business Harness</p></div></header><div class="tablewrap"><table><thead><tr><th>Finding / evidence</th><th>Implication for Mario</th><th>Required verification or control</th></tr></thead><tbody><tr><td><b>Speculative tool publication</b> — stage-0 completion calls _announce before the visible held-audio branch; _announce itself shows no release test. <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L604-L625" target="_blank" rel="noopener">D:604–625</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L1037-L1048" target="_blank" rel="noopener">D:1037–1048</a></td><td>A speculative call may escape even when the audio draft is dropped. <b>Risk hypothesis, not a reproduced defect.</b></td><td>Record spec_id, release, publish and execution times; prove no premature external action; keep client executor fail-closed.</td></tr><tr><td><b>Result binds to latest history</b> — _bridge_result uses history[-1] rather than resolving call_entry by ID. <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L1022-L1029" target="_blank" rel="noopener">D:1022–1029</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L1065-L1077" target="_blank" rel="noopener">D:1065–1077</a></td><td>Late results may be presented with a newer topic. It is deliberate conversational behavior, not strict business correlation.</td><td>Use application task identity and generation/state revision; accept historical execution receipt separately from spoken result.</td></tr><tr><td><b>Early tool result</b> — _announce can run before history commit; result handler returns false if history empty. <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L1037-L1048" target="_blank" rel="noopener">D:1037–1048</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py#L1065-L1077" target="_blank" rel="noopener">D:1065–1077</a></td><td>Very fast first-turn tools may race history creation. Not runtime-confirmed.</td><td>Test immediate result; require acceptance acknowledgment and a safe queue/replay strategy without re-executing tool.</td></tr><tr><td><b>Guard fails open after repeated rejection</b>. <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py#L506-L543" target="_blank" rel="noopener">R:506–543</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/grounding.py" target="_blank" rel="noopener">G</a></td><td>Heuristic grounding does not establish user authorization; repeated invalid arguments may pass.</td><td>Strict schema, tool allowlist, domain checks, consent and deterministic reject; never inherit retry bypass.</td></tr><tr><td><b>Cancellation / truncation</b> — gateway response.cancel is no-op; truncate handler acknowledges. <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py#L317-L321" target="_blank" rel="noopener">R:317–321</a></td><td>Cannot assume API cancel interrupts engine or rolls back business actions.</td><td>Observe actual engine stop and client playback; distinguish cancel speech, cancel request and compensate committed action.</td></tr><tr><td><b>Transport acknowledgment != playback</b>; GPT-Live commentary ack precedes ID check. <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/gateway.py#L235-L242" target="_blank" rel="noopener">L:235–242</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/gateway.py#L29-L31" target="_blank" rel="noopener">L:29–31</a></td><td>Unknown delegation may be acknowledged; transcript may lead audio.</td><td>Track accepted result, emitted speech and client playback separately.</td></tr><tr><td><b>In-memory tool queue and task state</b>. <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/bridge.py#L61-L75" target="_blank" rel="noopener">B:61–75</a> <a class="ref" href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/backend.py#L114-L129" target="_blank" rel="noopener">O:114–129</a></td><td>No demonstrated durable delivery, exactly-once semantics, or crash recovery.</td><td>Business executor owns idempotency keys, execution receipts, state and recovery.</td></tr></tbody></table></div><p class="small">These are static findings and targeted race hypotheses, not proof of failures in the deployed service. The source was inspected through the mutable public main branch. The installed commit, protocol build and runtime behavior must be independently pinned and tested.</p></section><section id="harness"><header><div class="num">09</div><div><h2>Harness Engineering comparison</h2><p>What Sophon owns vs what Mario should retain</p></div></header><figure><figcaption><b>06 / Recommended integration: reuse, do not duplicate</b><span>PROPOSED (v10 alignment). Existing upstream interfaces must pass G0/GD before production use.</span></figcaption><div class="diagram"><svg role="img" aria-label="06 / Recommended integration: reuse, do not duplicate" width="434pt" height="536pt"
+ viewBox="0.00 0.00 434.42 535.92" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="target-graph0" class="graph" transform="scale(1 1) rotate(0) translate(12.96 522.96)">
+<title>G</title>
+<!-- voice -->
+<g id="target-node1" class="node">
+<title>voice</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M266,-510C266,-510 110,-510 110,-510 104,-510 98,-504 98,-498 98,-498 98,-478 98,-478 98,-472 104,-466 110,-466 110,-466 266,-466 266,-466 272,-466 278,-472 278,-478 278,-478 278,-498 278,-498 278,-504 272,-510 266,-510"/>
+<text text-anchor="middle" x="188" y="-491.4" font-family="Arial" font-size="12.00" fill="#18374a">Sophon native audio runtime</text>
+<text text-anchor="middle" x="188" y="-478.4" font-family="Arial" font-size="12.00" fill="#18374a">turn scheduling + Thinker</text>
+</g>
+<!-- obs -->
+<g id="target-node2" class="node">
+<title>obs</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M277,-431C277,-431 99,-431 99,-431 93,-431 87,-425 87,-419 87,-419 87,-399 87,-399 87,-393 93,-387 99,-387 99,-387 277,-387 277,-387 283,-387 289,-393 289,-399 289,-399 289,-419 289,-419 289,-425 283,-431 277,-431"/>
+<text text-anchor="middle" x="188" y="-412.4" font-family="Arial" font-size="12.00" fill="#18374a">Shared Evidence Adapter</text>
+<text text-anchor="middle" x="188" y="-399.4" font-family="Arial" font-size="12.00" fill="#18374a">observations / turn IDs / playback</text>
+</g>
+<!-- voice&#45;&gt;obs -->
+<g id="target-edge1" class="edge">
+<title>voice&#45;&gt;obs</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M188,-465.96C188,-457.56 188,-447.75 188,-438.71"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="190.63,-438.52 188,-431.02 185.38,-438.52 190.63,-438.52"/>
+</g>
+<!-- route -->
+<g id="target-node3" class="node">
+<title>route</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M277,-352C277,-352 99,-352 99,-352 93,-352 87,-346 87,-340 87,-340 87,-328 87,-328 87,-322 93,-316 99,-316 99,-316 277,-316 277,-316 283,-316 289,-322 289,-328 289,-328 289,-340 289,-340 289,-346 283,-352 277,-352"/>
+<text text-anchor="middle" x="188" y="-330.9" font-family="Arial" font-size="12.00" fill="#18374a">Guard + validated route selection</text>
+</g>
+<!-- obs&#45;&gt;route -->
+<g id="target-edge2" class="edge">
+<title>obs&#45;&gt;route</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M188,-386.89C188,-378.5 188,-368.8 188,-360.06"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="190.63,-359.88 188,-352.38 185.38,-359.88 190.63,-359.88"/>
+</g>
+<!-- c -->
+<g id="target-node4" class="node">
+<title>c</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M90,-281C90,-281 12,-281 12,-281 6,-281 0,-275 0,-269 0,-269 0,-249 0,-249 0,-243 6,-237 12,-237 12,-237 90,-237 90,-237 96,-237 102,-243 102,-249 102,-249 102,-269 102,-269 102,-275 96,-281 90,-281"/>
+<text text-anchor="middle" x="51" y="-262.4" font-family="Arial" font-size="12.00" fill="#18374a">C / Direct chat</text>
+<text text-anchor="middle" x="51" y="-249.4" font-family="Arial" font-size="12.00" fill="#18374a">no Mario LLM</text>
+</g>
+<!-- route&#45;&gt;c -->
+<g id="target-edge3" class="edge">
+<title>route&#45;&gt;c</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M155.88,-315.88C138.41,-306.57 116.48,-294.89 97.2,-284.62"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="98.36,-282.26 90.5,-281.05 95.89,-286.89 98.36,-282.26"/>
+</g>
+<!-- d -->
+<g id="target-node5" class="node">
+<title>d</title>
+<path fill="#fff1d9" stroke="#c89543" stroke-width="1.4" d="M237.5,-281C237.5,-281 138.5,-281 138.5,-281 132.5,-281 126.5,-275 126.5,-269 126.5,-269 126.5,-249 126.5,-249 126.5,-243 132.5,-237 138.5,-237 138.5,-237 237.5,-237 237.5,-237 243.5,-237 249.5,-243 249.5,-249 249.5,-249 249.5,-269 249.5,-269 249.5,-275 243.5,-281 237.5,-281"/>
+<text text-anchor="middle" x="188" y="-262.4" font-family="Arial" font-size="12.00" fill="#18374a">D / Read&#45;only tool</text>
+<text text-anchor="middle" x="188" y="-249.4" font-family="Arial" font-size="12.00" fill="#18374a">no Mario LLM</text>
+</g>
+<!-- route&#45;&gt;d -->
+<g id="target-edge4" class="edge">
+<title>route&#45;&gt;d</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M188,-315.7C188,-307.68 188,-297.93 188,-288.84"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="190.63,-288.58 188,-281.08 185.38,-288.58 190.63,-288.58"/>
+</g>
+<!-- b -->
+<g id="target-node6" class="node">
+<title>b</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M396.5,-281C396.5,-281 285.5,-281 285.5,-281 279.5,-281 273.5,-275 273.5,-269 273.5,-269 273.5,-249 273.5,-249 273.5,-243 279.5,-237 285.5,-237 285.5,-237 396.5,-237 396.5,-237 402.5,-237 408.5,-243 408.5,-249 408.5,-249 408.5,-269 408.5,-269 408.5,-275 402.5,-281 396.5,-281"/>
+<text text-anchor="middle" x="341" y="-262.4" font-family="Arial" font-size="12.00" fill="#18374a">B / Complex request</text>
+<text text-anchor="middle" x="341" y="-249.4" font-family="Arial" font-size="12.00" fill="#18374a">Mario planner</text>
+</g>
+<!-- route&#45;&gt;b -->
+<g id="target-edge5" class="edge">
+<title>route&#45;&gt;b</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M223.87,-315.88C243.56,-306.49 268.3,-294.69 289.97,-284.35"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="291.24,-286.65 296.88,-281.05 288.98,-281.91 291.24,-286.65"/>
+</g>
+<!-- arb -->
+<g id="target-node8" class="node">
+<title>arb</title>
+<path fill="#e6effa" stroke="#668cb9" stroke-width="1.4" d="M216,-123C216,-123 22,-123 22,-123 16,-123 10,-117 10,-111 10,-111 10,-91 10,-91 10,-85 16,-79 22,-79 22,-79 216,-79 216,-79 222,-79 228,-85 228,-91 228,-91 228,-111 228,-111 228,-117 222,-123 216,-123"/>
+<text text-anchor="middle" x="119" y="-104.4" font-family="Arial" font-size="12.00" fill="#18374a">Result validation + generation fence</text>
+<text text-anchor="middle" x="119" y="-91.4" font-family="Arial" font-size="12.00" fill="#18374a">result/observation reconciliation</text>
+</g>
+<!-- c&#45;&gt;arb -->
+<g id="target-edge9" class="edge">
+<title>c&#45;&gt;arb</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M56.94,-236.79C65.16,-207.44 79,-158 79,-158 79,-158 89.19,-143.73 99.28,-129.6"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="101.65,-130.8 103.88,-123.17 97.38,-127.75 101.65,-130.8"/>
+</g>
+<!-- h -->
+<g id="target-node7" class="node">
+<title>h</title>
+<path fill="#ecebfa" stroke="#8b86c3" stroke-width="1.4" d="M273.5,-202C273.5,-202 102.5,-202 102.5,-202 96.5,-202 90.5,-196 90.5,-190 90.5,-190 90.5,-170 90.5,-170 90.5,-164 96.5,-158 102.5,-158 102.5,-158 273.5,-158 273.5,-158 279.5,-158 285.5,-164 285.5,-170 285.5,-170 285.5,-190 285.5,-190 285.5,-196 279.5,-202 273.5,-202"/>
+<text text-anchor="middle" x="188" y="-183.4" font-family="Arial" font-size="12.00" fill="#18374a">One business Harness</text>
+<text text-anchor="middle" x="188" y="-170.4" font-family="Arial" font-size="12.00" fill="#18374a">state / permissions / tools / RAG</text>
+</g>
+<!-- d&#45;&gt;h -->
+<g id="target-edge6" class="edge">
+<title>d&#45;&gt;h</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M188,-236.96C188,-228.56 188,-218.75 188,-209.71"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="190.63,-209.52 188,-202.02 185.38,-209.52 190.63,-209.52"/>
+</g>
+<!-- b&#45;&gt;h -->
+<g id="target-edge7" class="edge">
+<title>b&#45;&gt;h</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M299.19,-236.96C279.8,-227.2 256.63,-215.54 236.47,-205.39"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="237.64,-203.04 229.76,-202.02 235.28,-207.73 237.64,-203.04"/>
+</g>
+<!-- h&#45;&gt;arb -->
+<g id="target-edge8" class="edge">
+<title>h&#45;&gt;arb</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M169.15,-157.96C161.08,-148.96 151.57,-138.35 143.02,-128.8"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="144.79,-126.85 137.83,-123.02 140.88,-130.35 144.79,-126.85"/>
+</g>
+<!-- out -->
+<g id="target-node9" class="node">
+<title>out</title>
+<path fill="#ddf3ec" stroke="#329b83" stroke-width="1.4" d="M180,-44C180,-44 58,-44 58,-44 52,-44 46,-38 46,-32 46,-32 46,-12 46,-12 46,-6 52,0 58,0 58,0 180,0 180,0 186,0 192,-6 192,-12 192,-12 192,-32 192,-32 192,-38 186,-44 180,-44"/>
+<text text-anchor="middle" x="119" y="-25.4" font-family="Arial" font-size="12.00" fill="#18374a">Sophon native speech</text>
+<text text-anchor="middle" x="119" y="-12.4" font-family="Arial" font-size="12.00" fill="#18374a">A: exact say fallback</text>
+</g>
+<!-- arb&#45;&gt;out -->
+<g id="target-edge10" class="edge">
+<title>arb&#45;&gt;out</title>
+<path fill="none" stroke="#6d8797" stroke-width="1.25" d="M119,-78.96C119,-70.56 119,-60.75 119,-51.71"/>
+<polygon fill="#6d8797" stroke="#6d8797" stroke-width="1.25" points="121.63,-51.52 119,-44.02 116.38,-51.52 121.63,-51.52"/>
+</g>
+</g>
+</svg>
+</div></figure><div class="tablewrap"><table><thead><tr><th>Capability</th><th>Sophon upstream</th><th>Recommended ownership</th></tr></thead><tbody><tr><td>Audio I/O, turn timing, interruption</td><td>Implemented at engine/gateway</td><td>Sophon (do not reimplement)</td></tr><tr><td>Speech prompt and tool schema injection</td><td>Implemented with protocol-specific semantics</td><td>Sophon + versioned domain pack</td></tr><tr><td>Tool parsing / transport</td><td>Implemented; permissive parsing</td><td>Reuse + strict client validation</td></tr><tr><td>Text reasoning tool loop</td><td>Optional BackOffice</td><td>Replace/delegate to Mario when complex reasoning is needed; do not chain two similar planners</td></tr><tr><td>Skill implementation / RAG / live catalog</td><td>External application responsibility in reviewed path</td><td>Mario or existing business services</td></tr><tr><td>Business scenario state (Script_0–10)</td><td>No equivalent verified in reviewed modules</td><td>Mario SessionState and scenario policy</td></tr><tr><td>Permissions / booking / prices / consent</td><td>Not a complete transactional policy engine</td><td>Deterministic business Harness</td></tr><tr><td>Task lifecycle / idempotency / retries</td><td>Partial in-memory queues and bounded loops</td><td>Business task ledger with execution receipts</td></tr><tr><td>Direct model reply</td><td>Supported</td><td>Sophon native, when eligible</td></tr><tr><td>Direct validated read tool</td><td>Supported mechanism, application integration unverified</td><td>Sophon proposes; Harness validates/executes; bypass Mario LLM only after GD</td></tr></tbody></table></div><h3>Recommended first implementation boundary</h3><p>Do not replace the Sophon turn scheduler with Mario’s text-session logic. Do not enable the upstream optional BackOffice and also call Mario's planner for the same request by default. Use one native audio session and one business state authority. In the initial pilot, use versioned customer-service prompt fragments and narrow read-only catalog/RAG tools. Keep exact-speech Path A for fallback and critical statements, Path B for complex work, Path C for eligible conversation, and test Path D separately.</p><div class="note"><b>Skill vs tool:</b> A tool is a callable interface plus a result. A skill is our proposed reusable business capability composed of schema, validation, retrieval/execution, policy, state transition and evaluation. The inspected upstream code supplies the former’s transport and basic loop, not a verified general skill discovery or workflow engine.</div></section><section id="audit"><header><div class="num">10</div><div><h2>Practical source and runtime audit checklist</h2><p>Read-only first; no deployment or training implied</p></div></header><div class="tablewrap"><table><thead><tr><th>Test / experiment</th><th>Required evidence</th><th>Gate</th></tr></thead><tbody><tr><td>Source inventory</td><td>Exact Git SHA, installed package versions, engine/gateway endpoints, Tag/Flash build, source symbols; diff local vs upstream</td><td>T0 / G0-M</td></tr><tr><td>Speech and ASR ordering</td><td>Ordinary utterance, hesitation, self-correction, backchannel, VAD vs semantic commit, missing transcript</td><td>T0 / G0-M</td></tr><tr><td>Speculative call test</td><td>Slow/fast turn check; drop draft containing tool call; trace whether any call leaves process before release</td><td>T0 / G0</td></tr><tr><td>Tool correlation</td><td>First-turn fast result, delayed result after topic change, duplicate result, unknown call ID, disconnect</td><td>T0 / G0; T1 / GD</td></tr><tr><td>Response ownership</td><td>Native reply vs exact say; interruption; playback receipts; stale generation suppression</td><td>T0 / G0/G1</td></tr><tr><td>BackOffice comparison</td><td>relay vs ASR; compare with Mario using same fixture tools and cases; do not add a redundant planner</td><td>T1 / G2-B</td></tr><tr><td>Prompt/RAG/Direct tool</td><td>Versioned prompts, source-correct catalog, missing/ambiguous data, strict tool args, read-only execution</td><td>T1 / GD</td></tr><tr><td>LoRA candidate</td><td>Same sealed sessions; measure routing, argument validity, grounded speech, meaningful-answer latency and voice regression</td><td>T2 / G3</td></tr></tbody></table></div><h3>Proposed event trace (application format, not upstream API)</h3><pre><code>{&quot;session&quot;:&quot;s1&quot;,&quot;turn&quot;:&quot;u8&quot;,&quot;generation&quot;:4,&quot;event&quot;:&quot;tool_proposed&quot;,
+ &quot;origin&quot;:&quot;sophon.engine&quot;,&quot;call_id&quot;:&quot;call_1&quot;,&quot;spec_id&quot;:&quot;draft_7&quot;,
+ &quot;released&quot;:false,&quot;monotonic_ms&quot;:1000}
+{&quot;session&quot;:&quot;s1&quot;,&quot;turn&quot;:&quot;u8&quot;,&quot;generation&quot;:4,&quot;event&quot;:&quot;draft_dropped&quot;,
+ &quot;origin&quot;:&quot;sophon.engine&quot;,&quot;spec_id&quot;:&quot;draft_7&quot;,&quot;monotonic_ms&quot;:1040}
+// Expected application outcome: no business execution for call_1.
+// Illustrative only; actual event export must be established in source audit.</code></pre><p>Record message availability separately from desired fields. Never use an unverified speculative ID or internal score as if it were already in a public event. The first deliverable should be a pinned source inventory and correlated event trace, followed by a minimal adaptation design.</p></section><section id="sources"><header><div class="num">11</div><div><h2>Source index and review limitations</h2><p>Public upstream · reviewed 2026-11-26 · static source analysis</p></div></header><div class="tablewrap"><table><thead><tr><th>Key</th><th>Repository file</th><th>Relevant functions / evidence</th></tr></thead><tbody><tr><td>D</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/duplex.py" target="_blank" rel="noopener"><code>tag/plugin/sophon_realtime/duplex.py</code></a></td><td>SophonBuffer, turn_prob_http, _start_check, project, plan_append, _finish_reply, _announce, _bridge_result</td></tr><tr><td>P</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/proc.py" target="_blank" rel="noopener"><code>tag/plugin/sophon_realtime/proc.py</code></a></td><td>thinker2talker_async_chunk, stage handoff</td></tr><tr><td>T</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/tools.py" target="_blank" rel="noopener"><code>tag/plugin/sophon_realtime/tools.py</code></a></td><td>normalize_tools, cut_tool, parse_tool_calls, run_mock</td></tr><tr><td>B</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/plugin/sophon_realtime/bridge.py" target="_blank" rel="noopener"><code>tag/plugin/sophon_realtime/bridge.py</code></a></td><td>Bridge.push/pop, HTTP result and say handlers</td></tr><tr><td>A</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/adapters.py" target="_blank" rel="noopener"><code>live/sophon_live/adapters.py</code></a></td><td>VllmOmniAdapter.start, _recv, _poll, tool_result</td></tr><tr><td>L</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/gateway.py" target="_blank" rel="noopener"><code>live/sophon_live/gateway.py</code></a></td><td>GPT-Live session lifecycle, _delegate, _flush_model/_flush_rules, _pump</td></tr><tr><td>R</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/realtime.py" target="_blank" rel="noopener"><code>live/sophon_live/realtime.py</code></a></td><td>RealtimeSession on_update, _guard, _call, _delegate, _engine_events</td></tr><tr><td>O</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/backend.py" target="_blank" rel="noopener"><code>live/sophon_live/backend.py</code></a></td><td>BackOffice.transcript/run, configurable loop bounds</td></tr><tr><td>G</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/sophon_live/grounding.py" target="_blank" rel="noopener"><code>live/sophon_live/grounding.py</code></a></td><td>Argument grounding heuristics</td></tr><tr><td>LR</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/live/README.md" target="_blank" rel="noopener"><code>live/README.md</code></a></td><td>Live gateway protocol and delegation examples</td></tr><tr><td>TR</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/tag/README.md" target="_blank" rel="noopener"><code>tag/README.md</code></a></td><td>Tag deployment and speech pipeline</td></tr><tr><td>FR</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/flash/README.md" target="_blank" rel="noopener"><code>flash/README.md</code></a></td><td>Flash deployment and speech stage differences</td></tr><tr><td>ROOT</td><td><a href="https://github.com/adventists-ai/sophon-realtime/blob/main/README.md" target="_blank" rel="noopener"><code>README.md</code></a></td><td>Project-level description and build scope</td></tr></tbody></table></div><p><strong>Evidence scope:</strong> detailed static inspection of public Tag plugin and Live gateway files; no access to your private Mario checkout or deployed Sophon service. A single immutable upstream commit was not established because the commit API could not be retrieved. Links and line numbers are main-branch anchors from the inspected source and can drift. Re-pin before implementing; do not assume Flash, E2E or Mac internals match the Tag path. No GPU inference, tool execution, performance benchmark or race reproduction was performed. All integration recommendations, diagrams and sample car-sales data are proposed or illustrative unless explicitly described as inspected behavior.</p></section><div class="foot">Sophon-Realtime technical study · logical diagrams and application recommendations · 2026-11-26</div></main></div><script>const links=[...document.querySelectorAll('aside nav a')];if('IntersectionObserver'in window){const obs=new IntersectionObserver(es=>{for(const e of es){if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.hash==='#'+e.target.id));}}},{rootMargin:'-5% 0px -75% 0px'});document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));}</script></body></html>

@@ -167,6 +167,76 @@ class LiveSession:
         self.last_text = ""
         self.last_voice_t = 0.0                        # when the assistant's voice was last heard (model-mode updates)
         self.last_said = ""                            # the assistant's latest utterance
+        self.mario = None                              # OFF imports/creates no Mario resources
+        self._mario_turn = 0
+        self._mario_calls: set[str] = set()
+        self._owned: set[asyncio.Task] = set()
+        self._close_task = None
+
+    def _spawn(self, coro):
+        task = asyncio.create_task(coro)
+        self._owned.add(task)
+        task.add_done_callback(self._owned_done)
+        return task
+
+    def _owned_done(self, task):
+        self._owned.discard(task)
+        if not task.cancelled():
+            task.exception()
+
+    async def _open_mario(self):
+        if not getattr(self.args, "mario_enabled", False):
+            return
+        from .mario_bridge import DevBindings, MarioFactory
+        factory = getattr(self.args, "mario_factory", None)
+        bindings = getattr(self.args, "mario_bindings", None)
+        if not isinstance(factory, MarioFactory) or not isinstance(bindings, DevBindings) or factory.bindings != bindings:
+            raise ValueError("Enabled Mario requires safe isolated bindings and the real library factory.")
+        if self.mario is None:
+            self.mario = await factory.create(self.id, self._mario_emit)
+
+    def _invalidate_mario(self):
+        self._mario_turn += 1
+        if self.mario is not None:
+            self.mario.invalidate()
+        for d in self.deleg.values():
+            if d.get("internal"):
+                self._retire_deleg(d)
+                d["chunks"].clear()
+                d["mario_epoch"] = None
+
+    @staticmethod
+    def _retire_deleg(d):
+        for key in ("timer", "idle_timer", "progress_timer", "short_timer", "merge_timer"):
+            timer = d.get(key)
+            if timer is not None:
+                timer.cancel()
+                d[key] = None
+
+    def _mario_current(self, d):
+        if not d.get("internal"):
+            return not self.closed
+        return (not self.closed and self.mario is not None
+                and self.mario.valid(d.get("mario_epoch"), d.get("mario_revision")))
+
+    async def _mario_emit(self, event, epoch, revision, did):
+        d = self.deleg.get(did)
+        if (d is None or self.closed or self.mario is None
+                or not self.mario.valid(epoch, revision) or d.get("mario_epoch") != epoch):
+            return
+        if event["type"] == "error":
+            await self.send(event)
+            return
+        # Existing commentary event/consumer, with INTERNAL identity retained in
+        # the delegation until queued consumption. No new public protocol field.
+        d["mario_revision"] = revision
+        await self.send({"type": "session.commentary.appended", "start_ms": self.timeline_ms, "end_ms": self.timeline_ms, "client_event_id": None})
+        if not self._mario_current(d):
+            return
+        d["chunks"].append(("commentary", event["content"]))
+        if d.get("timer"):
+            d["timer"].cancel()
+        d["timer"] = asyncio.get_running_loop().call_later(DELEG_QUIET_S, lambda: self._spawn(self._flush_deleg(did)))
 
     # ------------------------------------------------------------- out
     async def send(self, ev: dict) -> None:
@@ -212,6 +282,11 @@ class LiveSession:
         voice = (sess.get("audio") or {}).get("output", {}).get("voice") or "marin"
         delegation = sess.get("delegation") or {}
         tools = [DELEGATE[self.lang]] if delegation.get("type") == "client" else []
+        try:
+            await self._open_mario()
+        except (ValueError, RuntimeError):
+            await self.error("server_error", "Isolated Mario configuration unavailable.")
+            return False
         self.engine = VllmOmniAdapter(self.args.engine, self.args.bridge)
         try:
             await self.engine.start(instructions=self._sys(), voice=os.environ.get(f"SOPHON_LIVE_VOICE_{voice.upper()}", DEFAULT_VOICE),
@@ -250,6 +325,10 @@ class LiveSession:
             await self.engine.send_audio(a)
         elif t in ("session.commentary.append", "session.thinking.append"):
             did = ev.get("delegation_id"); content = str(ev.get("content") or "")
+            d = self.deleg.get(did) if did else None
+            if d is not None and d.get("internal"):
+                await self.error("invalid_request_error", "Delegation is internally owned.")
+                return
             kind = "commentary" if t == "session.commentary.append" else "thinking"
             if kind == "commentary":
                 await self.send({"type": "session.commentary.appended", "start_ms": self.timeline_ms, "end_ms": self.timeline_ms, "client_event_id": ev.get("event_id")})
@@ -259,7 +338,7 @@ class LiveSession:
             d["chunks"].append((kind, content))
             if d.get("timer"):
                 d["timer"].cancel()
-            d["timer"] = asyncio.get_running_loop().call_later(DELEG_QUIET_S, lambda: asyncio.ensure_future(self._flush_deleg(did)))
+            d["timer"] = asyncio.get_running_loop().call_later(DELEG_QUIET_S, lambda: self._spawn(self._flush_deleg(did)))
         elif t == "session.instructions.append":
             await self.send({"type": "session.commentary.appended", "start_ms": self.timeline_ms, "end_ms": self.timeline_ms, "client_event_id": ev.get("event_id")})
             self.instructions = (self.instructions + "\n" + str(ev.get("content") or "")).strip()
@@ -272,6 +351,9 @@ class LiveSession:
             await self.error("invalid_request_error", f"Unknown event type: {t!r}")
 
     async def _flush_deleg(self, did: str) -> None:
+        d = self.deleg.get(did)
+        if d is None or not self._mario_current(d):
+            return
         if DELEG_MODE == "model":
             return await self._flush_model(did)
         return await self._flush_rules(did)
@@ -292,6 +374,8 @@ class LiveSession:
 
     async def _post_update(self, did: str, chunks: list) -> None:
         d = self.deleg[did]
+        if not self._mario_current(d):
+            return
         if d.get("idle_timer") is not None:
             d["idle_timer"].cancel(); d["idle_timer"] = None
         pc, pt, pn = UPDATE_PARTS[self.lang]
@@ -307,7 +391,7 @@ class LiveSession:
 
     async def _idle_update(self, did: str) -> None:
         d = self.deleg.get(did)
-        if d is None or d.get("posted_any"):
+        if d is None or d.get("internal") or d.get("posted_any"):
             return
         await self._post_update(did, [])
 
@@ -334,7 +418,7 @@ class LiveSession:
             d["working"] = True
             if d.get("progress_timer") is None and not d.get("progress_spoken"):
                 wait = max(0.0, d["t0"] + PROGRESS_AFTER_S - time.monotonic())
-                d["progress_timer"] = asyncio.get_running_loop().call_later(wait, lambda: asyncio.ensure_future(self._progress(did)))
+                d["progress_timer"] = asyncio.get_running_loop().call_later(wait, lambda: self._spawn(self._progress(did)))
         com = "".join(c for k, c in chunks if k == "commentary").strip()
         if com and (len(com) >= RESULT_MIN_CHARS or was_working):
             if not d.get("working"):
@@ -343,12 +427,12 @@ class LiveSession:
                 d.setdefault("res", []).extend(chunks)           # ("让我重新查一下…" then the real answer) -> merge into one reply
                 if d.get("merge_timer") is not None:
                     d["merge_timer"].cancel()
-                d["merge_timer"] = asyncio.get_running_loop().call_later(RESULT_MERGE_S, lambda: asyncio.ensure_future(self._merged(did)))
+                d["merge_timer"] = asyncio.get_running_loop().call_later(RESULT_MERGE_S, lambda: self._spawn(self._merged(did)))
         elif com:                                                # short and the backend hasn't shown it is still working
             held.extend(chunks)
             if d.get("short_timer") is not None:
                 d["short_timer"].cancel()
-            d["short_timer"] = asyncio.get_running_loop().call_later(SHORT_WAIT_S, lambda: asyncio.ensure_future(self._short_done(did)))
+            d["short_timer"] = asyncio.get_running_loop().call_later(SHORT_WAIT_S, lambda: self._spawn(self._short_done(did)))
             log.info("delegation %s: short commentary held (%d chars)", did, len(com))
         else:
             held.extend(chunks)
@@ -392,6 +476,8 @@ class LiveSession:
 
     async def _post(self, did: str, chunks: list, progress: bool) -> None:
         d = self.deleg[did]
+        if not self._mario_current(d):
+            return
         com = "".join(c for k, c in chunks if k == "commentary").strip()
         thk = "\n".join(c for k, c in chunks if k == "thinking").strip()
         fmt_c, fmt_t = RESULT_FMT[self.lang]
@@ -428,11 +514,12 @@ class LiveSession:
                 self.bi_noise = 0.95 * self.bi_noise + 0.05 * r if r < self.bi_noise * 3 else self.bi_noise
                 self.bi_gap += 20
                 if self.bi_gap >= 120: self.bi_voiced = 0
-            if self.bi_voiced >= BARGE_MS and self._playing():
+            if self.bi_voiced >= BARGE_MS and (self._playing() or (self.mario is not None and self.mario.busy)):
                 self.bi_voiced = 0
                 self._drop_playback("barge-in (gateway VAD)")
 
     def _drop_playback(self, why: str) -> None:
+        self._invalidate_mario()
         self.play.clear(); self.play_buf = np.zeros(0, np.int16)
         for r in self.resp.values():
             r["text"] = r["text"][: r["released"]]; r["done"] = True; r["dropped"] = True
@@ -503,27 +590,47 @@ class LiveSession:
             elif t == "tool_call":
                 if e.get("name") != "delegate":
                     log.warning("ignoring call to unknown tool %s", e.get("name")); continue
-                asyncio.create_task(self._delegate(e))           # never block the audio path while the transcript finishes
+                self._spawn(self._delegate(e))           # never block the audio path while the transcript finishes
             elif t == "error":
                 log.warning("session %s engine: %s", self.id, e.get("message"))
                 if "closed" in (e.get("message") or ""):
                     await self.error("server_error", "engine connection lost"); await self.close("server_error"); return
 
     async def _delegate(self, e: dict) -> None:
+        if self.closed:
+            return
+        if self.mario is not None:
+            if e["call_id"] in self._mario_calls:
+                return  # internally owned engine-call replay: never recommit
+            self._mario_calls.add(e["call_id"])
+            self._invalidate_mario()
+        turn = self._mario_turn
         task = self._cut_user()
         if task is not None:                                     # the client builds the task from the user's transcript: send it first
             try:
                 await asyncio.wait_for(asyncio.shield(task), 3)
             except Exception:  # noqa: BLE001
                 pass
+        if self.closed or (self.mario is not None and turn != self._mario_turn):
+            return
         did = "item_" + uuid.uuid4().hex[:16]
         what = (e.get("arguments") or {}).get("task")
         self.deleg[did] = {"call_id": e["call_id"], "chunks": [], "timer": None, "task": what, "t0": time.monotonic()}
-        if DELEG_MODE == "model":
-            self.deleg[did]["idle_timer"] = asyncio.get_running_loop().call_later(IDLE_UPDATE_S, lambda: asyncio.ensure_future(self._idle_update(did)))
-        await self.send({"type": "session.delegation.created", "offset_ms": self.timeline_ms,
-                         "delegation": {"id": did, "type": "delegation", "target": "client", "task": what}})
-        log.info("session %s delegation %s task=%r", self.id, did, what)
+        if DELEG_MODE == "model" and self.mario is None:
+            self.deleg[did]["idle_timer"] = asyncio.get_running_loop().call_later(IDLE_UPDATE_S, lambda: self._spawn(self._idle_update(did)))
+        event = {"type": "session.delegation.created", "offset_ms": self.timeline_ms,
+                 "delegation": {"id": did, "type": "delegation", "target": "client", "task": what}}
+        if self.mario is not None:
+            self.deleg[did]["internal"] = True
+        await self.send(event)
+        if self.closed or (self.mario is not None and turn != self._mario_turn):
+            return
+        if self.mario is not None:
+            epoch = self.mario.submit(event, turn_id="turn_" + str(turn))
+            self.deleg[did]["mario_epoch"] = epoch
+            log.info("session %s delegation %s isolated Mario scheduled", self.id, did)
+        else:
+            log.info("session %s delegation %s task=%r", self.id, did, what)
 
     # ------------------------------------------------------------- output pump (continuous, real time)
     async def _pump(self) -> None:
@@ -587,21 +694,47 @@ class LiveSession:
                 self._user(z)
                 await self.engine.send_audio(z)
 
-    async def close(self, reason: str) -> None:
-        if self.closed:
-            return
-        self.closed = True
-        for t in self.tasks:
-            t.cancel()
+    async def _finish_close(self, reason, caller):
+        for d in self.deleg.values():
+            self._retire_deleg(d)
+        tasks = set(self.tasks) | self._owned
+        if self.asr_task is not None:
+            tasks.add(self.asr_task)
+        tasks.discard(caller)
+        for task in tasks:
+            task.cancel()
         try:
-            await self.ws.send(json.dumps({"type": "session.closed", "reason": reason, "event_id": "ev_" + uuid.uuid4().hex[:12],
-                                           "session": {"id": self.id, "status": "closed", "model": self.model, "expires_at": 0}}))
-            await self.ws.close()
-        except Exception:  # noqa: BLE001
-            pass
-        if self.engine is not None:
-            await self.engine.close()
+            try:
+                if self.mario is not None:
+                    await self.mario.close()
+            finally:
+                if tasks:
+                    await asyncio.gather(*tasks, return_exceptions=True)
+        finally:
+            try:
+                await self.ws.send(json.dumps({"type": "session.closed", "reason": reason, "event_id": "ev_" + uuid.uuid4().hex[:12],
+                                               "session": {"id": self.id, "status": "closed", "model": self.model, "expires_at": 0}}))
+                await self.ws.close()
+            except Exception:  # noqa: BLE001
+                pass
+            if self.engine is not None:
+                await self.engine.close()
         log.info("session %s closed (%s)", self.id, reason)
+
+    async def close(self, reason: str) -> None:
+        if self._close_task is None:
+            self.closed = True
+            self._invalidate_mario()
+            self._close_task = asyncio.create_task(self._finish_close(reason, asyncio.current_task()), name="live-session-close")
+        interrupted = False
+        while not self._close_task.done():
+            try:
+                await asyncio.shield(self._close_task)
+            except asyncio.CancelledError:
+                interrupted = True
+        self._close_task.result()
+        if interrupted:
+            raise asyncio.CancelledError
 
 
 def main() -> None:
@@ -612,6 +745,19 @@ def main() -> None:
     ap.add_argument("--asr", default=os.environ.get("SOPHON_LIVE_ASR", "Qwen/Qwen3-ASR-0.6B-hf"))
     ap.add_argument("--path", default="/v1/live/sessions")
     args = ap.parse_args()
+    mario_flag = os.environ.get("SOPHON_LIVE_MARIO", "0")
+    if mario_flag not in ("0", "1"):
+        raise ValueError("SOPHON_LIVE_MARIO must be 0 or 1.")
+    args.mario_enabled = mario_flag == "1"
+    args.mario_factory = None
+    args.mario_bindings = None
+    if args.mario_enabled:
+        from .mario_bridge import DevBindings
+        config_path = os.environ.get("SOPHON_LIVE_MARIO_CONFIG")
+        if not config_path or not os.path.isabs(config_path):
+            raise ValueError("Enabled Mario requires an explicit external configuration path.")
+        with open(config_path, encoding="utf-8") as stream:
+            args.mario_bindings = DevBindings.from_config(json.load(stream))
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     asr = ASR(args.asr) if args.asr else None
     if asr is not None:
@@ -692,9 +838,16 @@ def main() -> None:
             await s.close("client_disconnected")
 
     async def run():
-        async with websockets.serve(handler, args.host, args.port, max_size=None, compression=None, process_request=process_request):
-            log.info("Sophon Live gateway on ws://%s:%d%s -> %s", args.host, args.port, args.path, args.engine)
-            await asyncio.Future()
+        if args.mario_enabled:
+            from .mario_bridge import MarioFactory
+            args.mario_factory = await MarioFactory.open(args.mario_bindings)
+        try:
+            async with websockets.serve(handler, args.host, args.port, max_size=None, compression=None, process_request=process_request):
+                log.info("Sophon Live gateway on ws://%s:%d%s -> %s", args.host, args.port, args.path, args.engine)
+                await asyncio.Future()
+        finally:
+            if args.mario_factory is not None:
+                await args.mario_factory.close()
     asyncio.run(run())
 
 

@@ -60,6 +60,18 @@ It is spoken verbatim as the next reply once the caller is silent, streams as a 
 
 Set `SOPHON_LIVE_BACKEND=<model>` with an OpenAI-compatible endpoint (`SOPHON_LIVE_BACKEND_URL`, `SOPHON_LIVE_BACKEND_KEY`) and the gateway answers delegations itself with a larger model: Sophon stays on the line, the back office reasons and calls tools. With DeepSeek V4 Pro as the back office, Big Bench Audio rises from 81.2 to about 83.
 
+## Isolated Mario development (default OFF)
+
+The GPT-Live face can explicitly route its own delegations through the isolated
+real Mario business library. This is not the optional back office above, a
+Mario WebSocket service or a public protocol change. With the switch unset,
+client delegation is unchanged and no Mario package or resource is created.
+Enabling requires the external safe development bindings and a real factory;
+there is no fallback provider. See [Mario text runtime and development adapter](MARIO_OFFLINE.md)
+for configuration, lifecycle, strict validation, durable shared model limits and
+offline tests. This does not authorize service startup or prove native speech,
+G0, audibility, full duplex or deployed activation.
+
 ## Test
 
 `python live_test.py --url ws://127.0.0.1:8780/v1/live/sessions` plays the 14 recorded questions in `cases/` (7 that should be delegated, 7 that should not) with a mock backend and prints whether each one was delegated, the transcript and the time to first audio.
